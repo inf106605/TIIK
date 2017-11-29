@@ -11,7 +11,7 @@ comp: ${main_class_bin_path}
 run: comp
 	java -cp '${bin_dir}' ${main_class}
 
-${bin_dir}%.class: ${src_dir}%.java
+${bin_dir}%.class: ${src_dir}%.java $(shell find '${src_dir}' -type f)
 	mkdir -p '${bin_dir}'
 	javac -cp '${src_dir}' -d '${bin_dir}' '$<'
 
