@@ -21,11 +21,11 @@ public class Main {
 
         SomeStatistics ss = new SomeStatistics(LitEN);
 
-        final Map<Integer, Double> empiricalProbability = ss.getEmpiricalProbability();
+        final Map<Integer, Double> empiricalProbabilities = ss.getEmpiricalProbabilities();
         final Map<Integer, Double> quantitiesOfInformation = ss.getQuantitiesOfInformation();
         System.out.println("char: probability qantity-of-information");
-        for (int c : empiricalProbability.keySet()) {
-            System.out.println(String.format("'%c': %2.4f%% %1.4f", c, empiricalProbability.get(c) * 100, quantitiesOfInformation.get(c)));
+        for (int c : empiricalProbabilities.keySet()) {
+            System.out.println(String.format("'%c': %2.4f%% %1.4f", c, empiricalProbabilities.get(c) * 100, quantitiesOfInformation.get(c)));
         }
 
         System.out.println();
