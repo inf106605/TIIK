@@ -22,12 +22,8 @@ public class SomeStatistics {
 		for (int i = 0; i != countsOfOnes.length; ++i) {
 			int count = 0;
 			for (int mask = 1; mask <= i; mask <<= 1)
-			{
-				if (mask == 256)
-					throw new RuntimeException("Oh shit, it has more than 8 bits!");
 				if ((mask & i) != 0)
 					++count;
-			}
 			countsOfOnes[i] = count;
 		}
 	}
