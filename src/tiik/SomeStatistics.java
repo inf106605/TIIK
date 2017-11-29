@@ -1,5 +1,7 @@
 package tiik;
 
+import java.io.InputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,24 +10,50 @@ public class SomeStatistics {
 	static private final double naturalLog2 = Math.log(2);
 	
 	private final Map<Byte, Long> counts = new HashMap<>();
+	private long inputSize;
 	private final Map<Byte, Double> empiricalProbabilities = new HashMap<>();
 	private double binaryEntropy;
 	private final Map<Byte, Double> quantitiesOfInformation = new HashMap<>();
 	
 	
 	public SomeStatistics(byte[] bytes) {
-		calculateEmpiricalProbabilities(bytes);
+		calculateCounts(bytes);
+		calculateEmpiricalProbabilities();
 		calculateBinaryEntropy();
 		calculateQuantitiesOfInformation();
 	}
 
-	private void calculateEmpiricalProbabilities(byte[] bytes) {
+	public SomeStatistics(InputStream inputStream) throws IOException {
+		calculateCounts(inputStream);
+		calculateEmpiricalProbabilities();
+		calculateBinaryEntropy();
+		calculateQuantitiesOfInformation();
+	}
+
+	private void calculateCounts(byte[] bytes) {
                 for (byte b : bytes)
 		{
 			final long count = counts.containsKey(b) ? counts.get(b) + 1 : 1;
 			counts.put(b, count);
 		}
-		final double size = bytes.length;
+		inputSize = bytes.length;
+	}
+	
+	private void calculateCounts(InputStream inputStream) throws IOException {
+		inputSize = 0;
+                while (true)
+		{
+			final int b = inputStream.read();
+			if (b == -1)
+				break;
+			final long count = counts.containsKey(b) ? counts.get(b) + 1 : 1;
+			counts.put((byte) b, count);
+			++inputSize;
+		}
+	}
+	
+	private void calculateEmpiricalProbabilities() {
+		final double size = inputSize;
 		for (byte b : counts.keySet())
 			empiricalProbabilities.put(b, counts.get(b) / size);
 	}
