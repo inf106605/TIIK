@@ -1,4 +1,4 @@
-package projekt_tiik;
+package tiik;
 
 import java.nio.charset.Charset;
 import java.util.HashMap;

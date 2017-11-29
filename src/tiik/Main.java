@@ -1,3 +1,6 @@
+
+package tiik;
+
 import java.util.Map;
 
 public class Main {
@@ -5,10 +8,10 @@ public class Main {
 	public static void main(String[] args) {
 		SomeStatistics ss = new SomeStatistics(someExampleText);
 		
-		final Map<Character, Double> empiricalProbability = ss.getEmpiricalProbability();
-		final Map<Character, Double> quantitiesOfInformation = ss.getQuantitiesOfInformation();
+		final Map<Integer, Double> empiricalProbability = ss.getEmpiricalProbability();
+		final Map<Integer, Double> quantitiesOfInformation = ss.getQuantitiesOfInformation();
 		System.out.println("char: probability qantity-of-information");
-		for (char c : empiricalProbability.keySet())
+		for (int c : empiricalProbability.keySet())
 			System.out.println(String.format("'%c': %2.4f%% %1.4f", c, empiricalProbability.get(c) * 100, quantitiesOfInformation.get(c)));
 		
 		System.out.println();
