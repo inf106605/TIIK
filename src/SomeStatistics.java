@@ -1,3 +1,6 @@
+package projekt_tiik;
+
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,12 +10,12 @@ public class SomeStatistics {
 	static private final double naturalLog2 = Math.log(2);
 	
 	private final String text;
-	private final Map<Character, Integer> countsOfCharacters = new HashMap<>();
-	private final Map<Character, Double> empiricalProbability = new HashMap<>();
+	private final Map<Integer, Integer> countsOfCharacters = new HashMap<>();
+	private final Map<Integer, Double> empiricalProbability = new HashMap<>();
 	private int countOfOnes = 0;
 	private double probabilityOfOne;
 	private double binaryEntropy;
-	private final Map<Character, Double> quantitiesOfInformation = new HashMap<>();
+	private final Map<Integer, Double> quantitiesOfInformation = new HashMap<>();
 	
 	
 	static {
@@ -42,9 +45,9 @@ public class SomeStatistics {
 	}
 
 	private void calculateEmpiricalProbability() {
-		for (int i = 0; i != text.length(); ++i)
+                for (byte b : text.getBytes(Charset.forName("windows-1252")))
 		{
-			final char c = text.charAt(i);
+                        int c = b >= 0 ? b : b + 256;
 			int count;
 			if (countsOfCharacters.containsKey(c))
 				count = countsOfCharacters.get(c) + 1;
@@ -53,12 +56,12 @@ public class SomeStatistics {
 			countsOfCharacters.put(c, count);
 		}
 		final double size = text.length();
-		for (char c : countsOfCharacters.keySet())
+		for (int c : countsOfCharacters.keySet())
 			empiricalProbability.put(c, countsOfCharacters.get(c) / size);
 	}
 
 	private void calculateBinaryEntropy() {
-		for (char c : countsOfCharacters.keySet())
+		for (int c : countsOfCharacters.keySet())
 			countOfOnes += countsOfOnes[c] * countsOfCharacters.get(c);
 		probabilityOfOne = (double)countOfOnes / (text.length() * 8);
 		final double p = probabilityOfOne;
@@ -66,7 +69,7 @@ public class SomeStatistics {
 	}
 
 	private void calculateQuantitiesOfInformation() {
-		for (char c : empiricalProbability.keySet()) {
+		for (int c : empiricalProbability.keySet()) {
 			final double quantityOfInformation = log2(1 / empiricalProbability.get(c));
 			quantitiesOfInformation.put(c, quantityOfInformation);
 		}
@@ -76,7 +79,7 @@ public class SomeStatistics {
 		return Math.log(x) / naturalLog2;
 	}
 	
-	public Map<Character, Double> getEmpiricalProbability() {
+	public Map<Integer, Double> getEmpiricalProbability() {
 		return empiricalProbability;
 	}
 	
@@ -84,7 +87,7 @@ public class SomeStatistics {
 		return binaryEntropy;
 	}
 	
-	public Map<Character, Double> getQuantitiesOfInformation() {
+	public Map<Integer, Double> getQuantitiesOfInformation() {
 		return quantitiesOfInformation;
 	}
 	
