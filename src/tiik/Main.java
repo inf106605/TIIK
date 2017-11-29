@@ -5,6 +5,12 @@
  */
 package tiik;
 
+import java.nio.charset.Charset;
+import java.util.IllegalFormatCodePointException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,14 +24,39 @@ public class Main {
      */
     public static void main(String[] args) {
         // TODO code application logic here
+        
+        byte[] bytes = LitEN.getBytes(Charset.forName("windows-1252"));
+        SomeStatistics ss = new SomeStatistics(bytes);
 
-        SomeStatistics ss = new SomeStatistics(LitEN);
-
-        final Map<Integer, Double> empiricalProbabilities = ss.getEmpiricalProbabilities();
-        final Map<Integer, Double> quantitiesOfInformation = ss.getQuantitiesOfInformation();
+        final Map<Byte, Double> empiricalProbabilities = ss.getEmpiricalProbabilities();
+        final Map<Byte, Double> quantitiesOfInformation = ss.getQuantitiesOfInformation();
         System.out.println("char: probability qantity-of-information");
-        for (int c : empiricalProbabilities.keySet()) {
-            System.out.println(String.format("'%c': %2.4f%% %1.4f", c, empiricalProbabilities.get(c) * 100, quantitiesOfInformation.get(c)));
+        List<Byte> keys = new LinkedList<>(empiricalProbabilities.keySet());
+	Comparator<Byte> unsignedByteComparator = new Comparator<Byte>() {
+            @Override
+            public int compare(final Byte byte1, final Byte byte2) {
+                final int int1 = byteToUnsignedInt(byte1);
+                final int int2 = byteToUnsignedInt(byte2);
+                if (int1 < int2)
+                    return -1;
+                else if (int1 > int2)
+                    return 1;
+                else
+                    return 0;
+            }
+            private int byteToUnsignedInt(byte b) {
+                return b >= 0 ? b : b + 256;
+            }
+        };
+        Collections.sort(keys, unsignedByteComparator);
+        for (byte b : keys) {
+            System.out.print(String.format("0x%02X ", b));
+            try {
+                System.out.print(String.format("'%c'", b));
+            } catch (IllegalFormatCodePointException e) {
+                System.out.print("   ");
+            }
+            System.out.println(String.format(": %2.4f%% %1.4f", empiricalProbabilities.get(b) * 100, quantitiesOfInformation.get(b)));
         }
 
         System.out.println();
