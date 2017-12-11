@@ -1,0 +1,1331 @@
+ 
+3
+WYJ¥TKI
+ 
+Doœwiadczenie - to nazwa, jak¹ nadajemy
+naszym b³êdom.
+Oscar Wilde
+ 
+Programiœci nie s¹ nieomylni. O tym wiedz¹ wszyscy, a najlepiej oni sami. W koñcu to g³ównie do nich nale¿y codzienna walka z wiêkszymi i mniejszymi b³êdami, wkradaj¹cymi siê do kodu Ÿród³owego. Dobrze, jeœli s¹ to tylko usterki sk³adniowe w rodzaju braku potrzebnego œrednika albo domykaj¹cego nawiasu. Wtedy sam kompilator daje o nich znaæ.
+Nieco gorzej jest, gdy mamy do czynienia z b³êdami objawiaj¹cymi siê dopiero podczas dzia³ania programu. Mo¿e to spowodowaæ nawet produkowanie nieprawid³owych wyników przez nasz¹ aplikacjê (b³êdy logiczne).
+Wszystkie tego rodzaju sytuacjê maj¹ jêdna cechê wspóln¹. Mo¿na bowiem (i nale¿y) im zapobiegaæ: mo¿liwe i po¿¹dane jest takie poprawienie kodu, aby b³êdy tego typu nie pojawia³y siê. Aplikacja bêdzie wtedy dzia³a³a poprawnie…
+ 
+Ale czy na pewno? Czy twórca aplikacji mo¿e przewidzieæ wszystkie sytuacje, w jakich znajdzie siê jego program? Nawet jeœli jego kod jest ca³kowicie poprawny i wolny od b³êdów, to czy gwarantuje to jego poprawne dzia³anie za ka¿dym razem?…
+Gdyby odpowied¿ na chocia¿ jedno z tych pytañ brzmia³a „Tak”, to programiœci pewnie rwaliby sobie z g³ów o po³owê mniej w³osów ni¿ obecnie. Niestety, nikt o zdrowym rozs¹dku nie mo¿e obiecaæ, ¿e jego kod bêdzie zawsze dzia³aæ zgodnie z oczekiwaniami. Naturalnie, je¿eli jest on napisany dobrze, to w wiêkszoœci przypadków tak w³aœnie bêdzie. Od ka¿dej regu³y zawsze jednak mog¹ wyst¹piæ wyj¹tki…
+ 
+W tym rozdziale bêdziemy mówiæ w³aœnie o takich wyj¹tkach - albo raczej o sytuacjach wyj¹tkowych. Poznamy mo¿liwoœci C++ w zakresie obs³ugi takich niecodziennych zdarzeñ i ogólne metody radzenia sobie z nimi.
+Mechanizm wyj¹tków w C++
+
+Czym w³aœciwie jest taka sytuacja wyj¹tkowa, która mo¿e narobiæ tyle zamieszania?… Otó¿:
+ 
+Sytuacja wyj¹tkowa (ang. exceptional state) ma miejsce wtedy, gdy warunki zewnêtrzne uniemo¿liwiaj¹ danemu fragmentowi kodu poprawne wykonanie. Ów fragment nie jest winny zaistnienia sytuacji wyj¹tkowej.
+ 
+Ogólnie sytuacj¹ wyj¹tkow¹ mo¿na nazwaæ ka¿dy b³¹d wystêpuj¹cy podczas dzia³ania programu, który nie jest spowodowany przez b³êdy w jego kodzie. To coœ w rodzaju przykrej niespodzianki: nieprawido³owych danych, nieprzewidzianego braku zasobów, i tak dalej. Takie przypadki mog¹ zdarzyæ siê w ka¿dym programie, nawet napisanym pozornie bezb³êdnie i dzia³aj¹cym doskonale w zwyk³ych warunkach. Sytuacje wyj¹tkowe, jak sama ich nazwa wskazuje, zdarzaj¹ siê bowiem tylko w warunkach wyj¹tkowych…
+Tradycyjne metody obs³ugi b³êdów
+
+Wyst¹pieniu sytuacji wyj¹tkowej zwykle nie mo¿na zapobiec - a przynajmniej nie mo¿e tego zrobiæ ten kawa³ek kodu, w którym ona faktycznie wystêpuje. Jego rol¹ powinno byæ zatem poinformowanie o zainstnia³ym zdarzeniu kodu, który stoi „wy¿ej” w strukturze programu. Kod wy¿szego poziomu mo¿e wtedy podj¹æ jakieœ sensowne akcje, a jeœli nie jest to mo¿liwe - w ostatecznoœci zakoñczyæ dzia³anie programu.
+ 
+Dzia³ania wykonywane w reakcji na b³êdy s¹ doœæ specyficzne dla ka¿dego programu. Obejmowac mog¹ na przyk³ad zapisanie informacji o zdarzeniu w specjalnym dzienniku, pokazanie komunikatu dla u¿ytkownika czy te¿ jeszcze inne czynnoœci. Tym zagadnieniem nie bedziemy siê wiêc zajmowaæ.
+Zobaczmy raczej, jakimi sposobami mo¿e odbywaæ siê powiadamianie o b³êdach. Tutaj istnieje kilka potencjalnym rozwi¹zañ - niektóre s¹ lepsze, inne nieco gorsze… Oto te najczêœciej wykorzystywane.
+Dopuszczalne sposoby
+
+Do ca³kiem dobrych metod informowania o niespodziewanych sytuacjach nale¿y zwracanie jakiejœ specjalnej wartoœci - indykatora. Wywo³uj¹cy dan¹ funkcjê mo¿e wtedy sprawdziæ, czy b³¹d wyst¹pi³, kontroluj¹c rezultaty zwrócone przez podprogram.
+Zwracanie nietypowego wyniku
+Najprostsz¹ drog¹ poinformowania o b³êdzie jest zwrócenie pewnej specjalnej wartoœci, która w normalnych warunkach nie m prawa wyst¹piæ. Aby to zilustrowaæ, za³ó¿my przez chwilê, ¿e mamy napisaæ funkcjê obliczaj¹c¹ pierwiastek kwadratowy z podanej liczby. Wiedz¹c to, ochoczo zabieramy siê do pracy, produkuj¹c np. taki oto kod:
+ 
+float Pierwiastek(float x)
+{
+   // sta³a okreœl¹j¹ca dok³adnoœæ
+   static const float EPSILON = 0.0001f;
+ 
+ 
+   /* liczymy pierwiastek kwadratowy metod¹ Newtona */
+ 
+   // wybieramy punkt pocz¹tkowy (po³owê wartoœci)
+   float fWynik = x / 2;
+ 
+   // wykonujemy tyle iteracji, aby otrzymaæ rozs¹dne przybli¿enie
+   while (abs(x - fWynik * fWynik) > EPSILON)
+         fWynik = (fWynik + x / fWynik) / 2;
+ 
+   // zwracamy wynik
+   return fWynik;
+}
+ 
+Funkcja ta wykorzystuje iteracyjn¹ metodê Newtona do obliczania pierwiastka, ale to nie jest dla nas zbyt wa¿ne, bowiem dotyczy zwyk³ej sytuacji. My natomiast mówimy o sytuacjach niezwyk³ych. Co ni¹ bêdzie dla naszej funkcji?…
+ 
+Na pewno bêdzie to podanie jej liczby ujemnej. Dopóki pozostajemy na gruncie prostej matematyki, jest to dla nas b³êdna wartoœæ - nie mo¿na wyci¹gn¹æ pierwiastka kwadratowego z liczby mniejszej od zera.
+Nie mo¿na jednak wykluczyæ, ¿e nasza funkcja otrzyma kiedyœ liczbê ujemn¹. Bêdzie to b³¹d, sytuacja wyj¹tkowa - i trzeba bêdzie na ni¹ zareagowaæ. Œciœle mówi¹c, trzeba bêdzie poinformowaæ o niej wywo³uj¹cego funkcjê.
+Specjalny rezultat
+
+Jak mo¿na to zrobiæ?… Prostym sposobem jest zwrócenie specjalnej wartoœci. Niech bêdzie to wartoœæ, która w normalnych warunkach nie ma prawa byæ zwrócona. W tym przypadku powinna to byæ taka liczba, której prawid³owe zwrócenie przez Pierwiastek() nie powinno mieæ miejsca.
+Jaka to liczba? Oczywiœcie - dowolna liczba ujemna. Powiedzmy, ¿e np. -1:
+ 
+if (x < 0)     return -1;
+ 
+Po dodaniu tego sprawdzenia funkcja bêdzie ju¿ odporna na sytuacje z nieprawid³owym argumentem. Wywo³uj¹cy j¹ bêdzie musia³ natomiast sprawdzaæ, czy rezultat funkcji nie jest przypadkiem informacj¹ o b³êdzie - np. w ten sposób:
+ 
+float fLiczba;
+float fPierwiastek;
+ 
+if ((fPierwiastek = Pierwiastek(fLiczba)) < 0)
+   std::cout << "Nieprawidlowa liczba";
+else
+   std::cout << "Pierwiastek z " << fLiczba << " to " << fPierwiastek;
+ 
+Jak widaæ, przy wykorzystaniu wartoœci zwracanej operatora przypisania nie jest to szczególnie uci¹¿liwe.
+Wady tego rozwi¹zania
+
+Takie rozwi¹zanie ma jednak kilka mankamentów. Pierwsz¹ widaæ ju¿ tutaj: nie wygl¹da ono szczególnie estetycznie od strony wywo³uj¹cego. Druga kwestia jest powa¿niejsza.
+ 
+Jest ni¹ problem doboru wartoœci specjalnej, sygnalizuj¹cej b³¹d. Zwracam uwagê, ¿e nie ma ona prawa pojawienia siê w jakiejkolwiek poprawnej sytuacji - musi ona jednoznacznie identyfikowaæ b³¹d, a nie przydatny rezultat.
+W przypadku funkcji Pierwiastek() by³o to proste, gdy¿ potencjalnych wartoœci jest mnóstwo: mo¿emy przecie¿ wykorzystaæ wszystkie liczby ujemne - poprawnym wynikiem funkcji jest bowiem tylko liczba dodatnia. Nie zawsze jednak musi tak byæ - czas na kolejny przyk³ad matematyczny, tym razem z logarytmem o dowolnej podstawie:
+ 
+float LogA(float a, float x)    { return log(x) / log(a); }
+ 
+Tutaj tak¿e mo¿liwe jest podanie nieprawid³owych argumentów: wystarczy, ¿eby choæ jeden z nich by³ ujemny lub aby podstawa logarytmu (a) by³a równa jeden. Nie warto polegaæ na reakcji funkcji bibliotecznej log() w razie zaistnienia takiej sytuacji; lepiej samemu coœ na to poradziæ.
+No w³aœnie - ale co? Mo¿emy oczywiœcie skontrolowaæ poprawnoœæ argumentów funkcji:
+ 
+if (a < 0 || a == 1.0f || x < 0)
+   /* b³¹d, ale jak o nim powiedzieæ?... */
+ 
+ale nie bardzo wiadomo, jak¹ specjaln¹ wartoœæ nale¿a³oby zwróciæ. W zakresie typu float nie ma bowiem ¿adnej „wolnej” liczby, poniewa¿ poprawny wynik logarytmu mo¿e byæ ka¿d¹ liczb¹ rzeczywist¹.
+Ostatecznie mo¿na zwróciæ zero, który to wynik zachodzi normalnie tylko dla x równego 1. Wówczas jednak sprawdzanie potencjalnego b³êdu by³oby bardzo niewygodne:
+ 
+// sprawdzamy, czy rezultat jest równy zero, a argument ró¿ny od jeden;
+// je¿eli tak, to b³¹d
+if (((fWynik = LogA(fPodstawa, fLiczba)) == 0.0f) && fLiczba != 1.0f)
+   std::cout << "Zly argument funkcji";
+else
+   std::cout << "Logarytm o podst. " << fPodstawa << " z " << fLiczba
+             << " wynosi " << fWynik;
+ 
+To chyba przes¹dza fakt, i¿ ³¹czenie informacji o b³êdzie z w³aœciwym wynikiem nie jest dobrym pomys³em.
+Oddzielenie rezultatu od informacji o b³êdzie
+Obie te dane trzeba od siebie odseparowaæ. Funkcja powinna zatem zwracaæ dwie wartoœci: jedn¹ „w³aœciw¹” oraz drug¹, informuj¹c¹ o powodzeniu lub niepowodzeniu operacji.
+ 
+Ma to rozliczne zalety - miêdzy innymi:
+O       pozwala przekazaæ wiêcej danych na temat charakteru b³êdu
+O       upraszcza kontrolê poprawnoœci wykonania funkcji
+O       umo¿liwia swobodê zmian w kodzie i ewentualne rozszerzenie funkcjonalnoœci
+ 
+Wydaje siê jednak, ¿e jest doœæ powa¿ny problem: jak funkcja mia³aby zwracaæ dwie wartoœci?… Có¿, chyba brak ci pomys³owoœci - istnieje bowiem kilka dróg zrealizowania tego mechanizmu.
+Wykorzystanie wskaŸników
+
+Nasza funkcja, oprócz normalnych argumentów, mo¿e przyjmowaæ jeden wskaŸnik. Za jego poœrednictwem przekazana zostanie dodatkowa wartoœæ. Mo¿e to byæ informacja o b³êdzie, ale czêœciej (i wygodniej) umieszcza siê tam w³aœciwy rezultat funkcji.
+ 
+Jak to wygl¹da? Oto przyk³ad. Funkcja StrToUInt() dokonuje zamiany liczby naturalnej zapisanej jako ci¹g znaków (np. "21433") na typ unsigned:
+ 
+#include <cmath>
+ 
+bool StrToUInt(const std::string& strLiczba, unsigned* puWynik)
+{
+   // sprawdzamy, czy podany napis w ogóle zawiera znaki
+   if (strLiczba.empty())  return false;
+ 
+ 
+   /* dokonujemy konwersji */
+ 
+   // zmienna na wynik
+   unsigned uWynik = 0;
+ 
+   // przelatujemy po kolejnych znakach, sprawdzaj¹c czy s¹ to cyfry
+   for (unsigned i = 0; i < strLiczba.length(); ++i)
+         if (strLiczba[i] > '0' && strLiczba[i] < '9')
+         {
+               // OK - cyfra; mno¿ymy aktualny wynik przez 10
+               // i dodajemy tê cyfrê
+               uWynik *= 10;
+               uWynik += strLiczba[i] - '0';
+         }
+         else
+               // je¿eli znak nie jest cyfr¹, to koñczymy niepowodzeniem
+               return false;
+ 
+   // w przypadku sukcesu przepisujemy wynik i zwracamy true
+   *puWynik = uWynik;
+   return true;
+}
+ 
+Nie jest ona mo¿e najszybsza, jako ¿e wykorzystuje najprostszy, „naturalny” algorytm konwersji. Nam jednak chodzi o coœ innego: o sposób, w jaki funkcja zwraca rezultat i informacjê o ewentualnym b³êdzie.
+Jak mo¿na zauwa¿yæ, typem zwracanym przez funkcjê jest bool. Nie jest to wiêc zasadniczy wynik, lecz tylko znacznik powodzenia lub niepowodzenia dzia³añ. Zasadniczy rezultat to kwestia ostatniego parametru funkcji: nale¿y tam przekazaæ wskaŸnik na zmienn¹, która otrzyma wynikow¹ liczbê.
+ 
+Brzmi to mo¿e nieco skomplikowanie, ale w praktyce korzystanie z tak napisanej funkcji jest bardzo proste:
+ 
+std::string strLiczba;
+unsigned uLiczba;
+ 
+if (StrToUInt(strLiczba, &uLiczba))
+   std::cout << strLiczba << " razy dwa == " << uLiczba * 2;
+else
+   std::cout << strLiczba << " - nieprawidlowa liczba";
+ 
+Mo¿esz siê spieraæ: „Ale przecie¿ tutaj mamy wybitnego kandydata na po³¹czenie rezultatu z informacj¹ o b³êdzie! Wystarczy zmieniæ zwracany typ na int - wtedy wszystkie wartoœci ujemne mog³yby informowaæ o b³êdzie!…”
+Chyba jednak sam widzisz, jak to rozwi¹zanie by³oby naci¹gane. Nie doœæ, ¿e u¿ylibyœmy nieadekwatnego typu danych (który ma mniejszy zakres interesuj¹cych nas liczb dodatnich ni¿ unsigned), to jeszcze ograniczylibyœmy mo¿liwoœæ przysz³ej rozbudowy funkcji. Za³ó¿my na przyk³ad, ¿e na bazie StrToUInt() chcesz napisaæ funkcjê StrToInt():
+ 
+bool StrToInt(const std::string& strLiczba, int* pnWynik);
+ 
+Nie jest to trudne, je¿eli wykorzystujemy zaprezentowan¹ tu technikê informacji o b³êdach. Gdybyœmy jednak poprzestali na ³¹czeniu rezultatu z informacj¹ o b³edzie, wówczas by³oby to problemem. Oto stracilibyœmy przecie¿ ca³¹ „ujemn¹ po³ówkê” typu int, bo ona teraz tak¿e musia³aby byæ przeznaczona na poprawne wartoœci.
+ 
+Dla wprawy w ogólnym programowaniu mo¿esz napisaæ funkcjê StrToInt(). Jest to raczej proste: wystarczy dodaæ sprawdzanie znaku ‘minus’ na pocz¹tku liczby i nieco zmodyfikowaæ pêtlê for.
+ 
+Widaæ wiêc, ¿e mimo pozornego zwiêkszenia poziomu komplikacji, ten sposób informowania o b³edach jest lepszy. Nic dziwnego, ¿e stosuj¹ go zarówno funkcje Windows API, jak i interfejsu DirectX.
+U¿ycie struktury
+
+Dla nieobytych ze wskaŸnikami (mam nadziejê, ¿e do nich nie nale¿ysz) sposób zaprezentowany wy¿ej mo¿e siê wydawaæ dziwny. Istnieje te¿ nieco inna metoda na odseparowanie w³aœciwego rezultatu od informacji o b³êdzie.
+ 
+Otó¿ parametry funkcji pozostawiamy bez zmian, natomiast inny bêdzie typ zwracany przez ni¹. W miejsce pojedynczej wartoœci (jak poprzednio: unsigned) u¿yjemy struktury:
+ 
+struct RESULT
+{
+   unsigned uWynik;
+   bool bBlad;
+};
+ 
+Zmodyfikowany prototyp bêdzie wiêc wygl¹da³ tak:
+ 
+RESULT StrToUInt(const std::string& strLiczba);
+ 
+Myœlê, ¿e nietrudno zgadn¹æ, jakie zmiany zajd¹ w treœci funkcji.
+ 
+Wywo³anie tak spreparowanej funkcji nie odbiega od wywo³ania funkcji z „wymieszanym” rezultatem. Musi ono wygl¹daæ co najmniej tak:
+ 
+RESULT Wynik = StrToUInt(strLiczba);
+if (Wynik.bBlad)
+   /* b³¹d */
+ 
+Mo¿na te¿ u¿yæ warunku:
+ 
+if ((Wynik = StrToUInt(strLiczba)).bBlad)
+ 
+który wygl¹da pewnie dziwnie, ale jest sk³adniowo poprawny, bo przecie¿ wynikiem przypisania jest zmienna typu RESULT.
+ 
+Tak czy inaczej, nie jest to zbyt poci¹gaj¹ca droga. Jest jeszcze gorzej, jeœli uœwiadomimy sobie, ¿e dla ka¿dego mo¿liwego typu rezultatu nale¿a³oby definiowaæ odrêbn¹ strukturê. Poza tym prototyp funkcji staje siê mniej czytelny, jako ¿e typ jej w³aœciwego rezultatu (unsigned) ju¿ w nim nie wystêpuje. [1]
+ 
+Dlatego te¿ o wiele lepiej u¿ywaæ metody z dodatkowym parametrem wskaŸnikowym.
+Niezbyt dobre wyjœcia
+
+Oba zaprezentowane w poprzednim paragrafie sposoby obs³ugi b³êdów zak³ada³y proste poinformowanie wywo³uj¹cego funkcjê o zainstnia³ym problemie. Mimo tej prostoty, sprawdzaj¹ siê one bardzo dobrze.
+ 
+Istniej¹ aczkolwiek tak¿e inne metody raportowania b³êdów, które nie maj¹ ju¿ tak licznych zalet i nie s¹ szeroko stosowane w praktyce. Oto te metody.
+Wywo³anie zwrotne
+Idea wywo³ania zwrotnego (ang. callback) jest nieskomplikowana. Je¿eli w pisanej przez nas funkcji zachodzi sytuacja wyj¹tkowa, wywo³ujemy inn¹ funkcjê pomocniczn¹. Taka funkcja mo¿e pe³niæ rolê „ratunkow¹” i spróbowaæ naprawiæ okolicznoœci, które doprowadzi³y do powstania problemu - jak np. b³êdne argumenty dla naszej funkcji. W ostatecznoœci mo¿e to byæ tylko sposób na powiadomienie o nienaprawialnej sytuacji wyj¹tkowej.
+Uwaga o wygodnictwie
+
+Zaleta wywo³ania zwrotnego uwidacznia siê w powy¿szym opisie. Przy jego pomocy nie jesteœmy skazani na bierne przyjêcie do wiadomoœci wyst¹pienia b³êdu; przy odrobinie dobrej woli mo¿na postaraæ siê go naprawiæ.
+Nie zawsze jest to jednak mo¿liwe. Mo¿na wprawdzie poprawiæ nieprawid³owy parametr, przekazany do funkcji, ale ju¿ nic nie zaradzimy chocia¿by na brak pamiêci.
+ 
+Poza tym, technika callback z góry czyni pesymistyczne zalo¿enie, ¿e sytuacje wyj¹tkowe bêd¹ trafia³y siê na tyle czêsto, ¿e konieczny staje siê mechanizm wywo³añ zwrotnych. Jego stosowanie nie zawsze jest wspó³mierne do problemu, czasem jest to zwyczajne strzelanie z armaty do komara. Przyk³adowo, w funkcji Pierwiastek() spokojnie mo¿emy sobie pozwoliæ na inne sposoby informowania o b³êdach - nawet w obliczu faktu, ¿e naprawienie nieprawid³owego argumentu by³oby przecie¿ mo¿liwe. Funkcja ta nie jest bowiem na tyle kosztowna, aby op³aca³o siê chroniæ j¹ przed niespodziewanym zakoñczeniem.
+Dlaczego jednak wywo³anie zwrotne jest taki „ciê¿kim” œrodkiem? Otó¿ wymaga ono specjalnych przygotowañ. Od strony programisty-klienta obejmuj¹ one przede wszystkim napisania odpowiednich funkcji zwrotnych. Od strony pisz¹cego kod biblioteczny wymagaj¹ natomiast gruntowego obmyœlenia mechanizmu takich funkcji zwrotnych: tak, aby nie mno¿yæ ich ponad miarê, a jednoczeœnie zapewniæ dla siebie pewn¹ wygodê i uniwersalnoœæ.
+Uwaga o logice
+
+Funkcje callback s¹ te¿ bardzo k³opotliwe z punktu widzenia logiki programu i jego konstrukcji. Zak³adaj¹ bowiem, by kod ni¿szego poziomu - jak funkcje biblioteczne w rodzaju wspomnianej Pierwiastek() lub StrToUInt() - wywo³ywa³y kod wy¿szego poziomu, zwi¹zany bezpoœrednio z dzia³aniem samej aplikacji. £amie to naturaln¹ hierarchiê „warstw” kodu i burzy porz¹dek jego wykonywania.
+Uwaga o niedostatku mechanizmów
+
+Wreszcie trzeba wspomnieæ, ¿e w C++ nie ma dobrych sposobów na realizacjê funkcji zwrotnych. Owszem, mamy wskaŸniki na funkcje - jednak one pozwalaj¹ pokazywaæ jedynie na funkcje globalne lub statyczne metody klas. Nie posiadamy natomiast niezbêdnego w programowaniu obiektowym mechanizmu wskaŸnika na niestatyczn¹ metodê obiektu (ang. closure), przez co trudno jest zrealizowaæ callback.
+ 
+W poprzednim rozdziale opisa³em pewien sposób na obejœcie tego problemu, ale jak wszystkie po³owiczne rozwi¹zania, nie jest on zbyt elegancki…
+Zakoñczenie programu
+Wyj¹tkowy b³¹d mo¿e spowodowaæ jeszcze jedn¹ mo¿liw¹ akcjê: natychmiastowe zakoñczenie dzia³ania programu.
+ 
+Brzmi to bardzo drastycznie i takie jest w istocie. Naprawdê trudno wskazaæ sytuacjê, w której by³oby konieczne przerwanie wykonywania aplikacji - zw³aszcza niepoprzedzone ¿adnym ostrze¿eniem czy zapytaniem do u¿ytkownika. Chyba tylko krytyczne braki pamiêci lub niezbêdnych plików mog¹ byæ tego czêœciowym usprawiedliwieniem.
+Na pewno jednak fatalnym pomys³em jest stosowanie tego rozwi¹zania dla ka¿dej sytuacji wyj¹tkowej. I chyba nawet nie muszê mówiæ, dlaczego…
+Wyj¹tki
+
+Takie s¹ tradycyjne sposobu obs³ugi sytuacji wyj¹tkowych. By³y one przydatne przez wiele lat i nadal nie straci³y nic ze swojej u¿ytecznoœci. Nie myœl wiêc, ¿e mechanizm, który zaraz poka¿ê, mo¿e je ca³kowicie zast¹piæ.
+ 
+Tym mechanizmem s¹ wyj¹tki (ang. exceptions). Skojarzenie tej nazwy z sytuacjami wyj¹tkowymi jest jak najbardziej wskazane. Wyj¹tki s³u¿¹ w³aœnie do obs³ugi niecodzienych, niewystêpuj¹cych w normalnym toku programu wypadków.
+Spójrzmy wiêc, jak mo¿e siê to odbywaæ w C++.
+Rzucanie i ³apanie wyj¹tków
+
+Technikê obs³ugi wyj¹tków mo¿na streœciæ w trzech punktach, które od razu wska¿¹ nam jej najwa¿niejsze elementy. Tak wiêc, te trzy za³o¿enia wyj¹tków s¹ nastêpuj¹ce:
+O       je¿eli piszemy kod, w którym mo¿e zdarzyæ siê coœ wyj¹tkowego i niecodziennego, czyli po prostu sytuacja wyj¹tkowa, oznaczamy go odpowiednio. Tym oznaczeniem jest ujêcie kodu w blok try (‘spróbuj’). To ca³kiem obrazowa nazwa: kod wewn¹trz tego bloku nie zawsze mo¿e byæ poprawnie wykonany, dlatego lepiej jest mówiæ o próbie jego wykonania: je¿eli siê ona powiedzie, to bardzo dobrze; je¿eli nie, bêdziemy musieli coœ z tym fantem zrobiæ…
+O       za³ó¿my, ¿e wykonuje siê nasz kod wewn¹trz bloku try i stwierdzamy w nim, ¿e zachodzi sytuacja wyj¹tkowa, któr¹ nale¿y zg³osiæ. Co robimy? Otó¿ u¿ywamy instrukcji throw (‘rzuæ’), podaj¹c jej jednoczeœnie tzw. obiekt wyj¹tku (ang. exception object). Ten obiekt, mog¹cy byæ dowolnym typem danych, jest zwykle informacj¹ o rodzaju i miejscu zainstnia³ego b³êdu
+O       rzucenie obiektu wyj¹tku powoduje przerwanie wykonywania bloku try, zaœ nasz rzucony obiekt „leci” sobie przez chwilê - a¿ zostanie przez kogoœ z³apany. Tym zaœ zajmuje siê blok catch (‘z³ap’), nastêpuj¹cy bezpoœrednio po bloku try. Jego zadaniem jest reakcja na sytuacjê wyj¹tkow¹, co zazwyczaj wi¹¿e siê z odczytaniem obiektu wyj¹tku (rzuconego przez throw) i podjêciem jakiejœ sensownej akcji
+ 
+A zatem mechanizmem wyj¹tków ¿¹dz¹ te trzy proste zasady:
+ 
+Blok try obejmuje kod, w którym mo¿e zajœæ sytuacja wyj¹tkowa.
+ 
+Instrukcja throw wewn¹trz bloku try s³u¿y do informowania o takiej sytuacji przy pomocy obiektu wyj¹tku.
+ 
+Blok catch przechwytuje obiekty wyrzucone przez throw i reaguje na zainstania³e sytuacje wyj¹tkowe.
+ 
+Tak to wygl¹da w teorii - teraz czas na obejrzenie kodu obs³ugi wyj¹tków w C++.
+Blok try-catch
+Obs³uga sytuacji wyj¹tkowych zawiera siê wewn¹trz bloków try i catch. Wygl¹daj¹ one na przyk³ad tak:
+ 
+try
+{
+   ryzykowne_instrukcje
+}
+catch (...)
+{
+   kod_obs³ugi_wyj¹tków
+}
+ 
+ryzykowne_instrukcje zawarte wewn¹trz bloku try s¹ kodem, który poddawany jest pewnej specjalnej ochronie na wypadek wyst¹pienia wyj¹tku. Na czym ta ochrona polega - bêdziemy mówiæ w nastêpnym podrozdziale. Na razie zapamiêtaj, ¿e w bloku try umieszczamy kod, którego wykonanie mo¿e spowodowaæ sytuacjê wyj¹tkow¹, np. wywo³ania funkcji bibliotecznych.
+Je¿eli tak istotnie siê stanie, to wówczas sterowanie przenosi siê do bloku catch. Instrukcja catch „³apie” wystêpuj¹ce wyj¹tki i pozwala przeprowadziæ ustalone dzia³ania w reakcji na nie.
+Instrukcja throw
+Kiedy wiadomo, ¿e wyst¹pi³a sytuacja wyj¹tkowa?… Otó¿ musi ona zostaæ zasygnalizowana przy pomocy instrukcji throw:
+ 
+throw obiekt;
+ 
+Wyst¹pienie tej instrukcji powoduje natychmiastowe przerwanie normalnego toku wykonywania programu. Sterowanie przenosi siê wtedy do najbli¿szego pasuj¹cego bloku catch.
+Rzucony obiekt pe³ni natomiast funkcjê informuj¹c¹. Mo¿e to byæ wartoœæ dowolnego typu - równie¿ bêd¹ca obiektem zdefiniowanej przez nas klasy, co jest szczególnie przydatne. obiekt zostaje „wyrzucony” poza blok try; mo¿na to porównaæ do pilota katapultuj¹cego siê z samolotu, który niechybnie ulegnie katastrofie. Wyst¹pienie throw jest bowiem sygna³em takiej katastrofy - sytuacji wyj¹tkowej.
+Wêdrówka wyj¹tku
+
+Zaraz za blokiem try nastêpuje najczêœciej odpowiednia instrukcja catch, która z³apie obiekt wyj¹tku. Wykona potem odpowiednie czynnoœci, zawarte w swym bloku, a nastêpnie program rozpocznie wykonywanie dalszych instrukcji, zaraz za blokiem catch.
+Jeœli jednak wyj¹tek nie zostanie przechwycony, to mo¿e on opuœciæ sw¹ macierzyst¹ funkcjê i dotrzeæ do tej, któr¹ j¹ wywo³a³a. Jeœli i tam nie znajdzie odpowiadaj¹cego bloku catch, to wyjdzie jeszcze bardziej „na powierzchniê”. W przypadku gdy i tam nie bêdzie pasuj¹cej instrukcji catch, bêdzie wyskakiwa³ jeszcze wy¿ej, i tak dalej.
+Proces ten nazywamy odwijaniem stosu (ang. stack unwinding) i trwa on dopóki jakaœ instrukcja catch nie z³apie lec¹cego wyj¹tku. W skrajnym (i nieprawid³owym) przypadku, odwijanie mo¿e zakoñczyæ siê przerwaniem dzia³ania programu - mówimy wtedy, ¿e wyst¹pi³ niez³apany wyj¹tek (ang. uncaught exception).
+ 
+
+Schemat 39. Wêdrówka wyj¹tku rzuconego w funkcji
+
+ 
+Zarówno o odwijaniu stosu, jak i o ³apaniu i niez³apaniu wyj¹tków bêdziemy szerzej mówiæ w przysz³ym podrozdziale.
+throw a return
+
+Instrukcja throw jest trochê podobna do instrukcji return, której u¿ywamy do zakoñczenia funkcji i zwrócenia jej rezultatu. Istniej¹ jednak wa¿ne ró¿nice:
+O       return powoduje zawsze przerwanie tylko jednej funkcji i powrót do miejsca, z którego j¹ wywo³ano. throw mo¿e natomiast wcale nie przerywaæ wykonywania funkcji (je¿eli znajdzie w niej pasuj¹c¹ instrukcjê catch), lecz równie dobrze mo¿e przerwaæ dzia³anie wielu funkcji, a nawet ca³ego programu
+O       w przypadku return mo¿liwe jest „rzucenie” obiektu nale¿¹cego tylko do jednego, œciœle okreœlonego typu. Tym typem jest typ zwracany przez funkcjê, okreœlany w jej deklaracji. throw mo¿e natomiast wyrzucaæ obiekt dowolnego typu, zale¿nie od potrzeb
+O       return jest normalnym sposobem powrotu z funkcji, który stosujemy we wszystkich typowych sytuacjach. throw jest zaœ u¿ywany w sytuacjach wyj¹tkowych; nie powinno siê u¿ywaæ go jako zamiennika dla return, bo przeznaczenie obu tych instrukcji jest inne
+ 
+Widaæ wiêc, ¿e mimo pozornego podobieñstwa instrukcje te s¹ zupe³nie ró¿ne. return jest typow¹ instrukcj¹ jêzyka programowania, bez której tworzenie programów by³oby niemo¿liwe. throw jest z kolei czêœci¹ wiêkszej caloœci - mechanizmu obs³ugi wyj¹tków - bêd¹cym po prostu specjalnym mechanizmem radzenia sobie z sytuacjami kryzysowymi. Mimo jej przydatnoœci, stosowanie tej techniki nie jest obowi¹zkowe.
+Skoro jednak mamy wybieraæ miêdzy u¿ywaniem a nieu¿ywaniem wyj¹tków (a takich wyborów bêdziesz dokonywa³ czêsto), nale¿y wiedzieæ o wyj¹tkach coœ wiêcej. Dlatego te¿ kontynuujemy zajmowanie siê tym tematem.
+W³aœciwy chwyt
+
+W poprzednich akapitach kilkakrotnie u¿ywa³em sformu³owania „pasuj¹cy blok catch” oraz „odpowiednia instrukcja catch”. Có¿ one znacz¹?…
+ 
+Jedn¹ z zalet mechanizmu wyj¹tków jest to, ¿e instrukcja throw mo¿e wyrzucaæ obiekty dowolnego typu. Poni¿sze wiersze s¹ wiêc ca³kowicie poprawne:
+ 
+throw 42u;
+throw "Straszny blad!";
+throw CException("Wystapil wyjatek", __FILE__, __LINE__);
+throw 17.5;
+ 
+Te cztery instrukcje throw rzucaj¹ (odpowiednio) obiekty typów unsigned, const char[], zdefiniowanej przez u¿ytkownika klasy CException oraz double. Wszystkie one s¹ zapewne cennymi informacjami o b³êdach, które nale¿a³oby odczytaæ w bloku catch. Niewykluczone przecie¿, ¿e nawet najmniejsza pomoc „z miejsca katastrofy” mo¿e byæ dla nas przydatna.
+ 
+Dlatego te¿ w mechanizmie wyj¹tków przewidziano sposób nie tylko na oddanie sterowania do bloku catch, ale te¿ na przes³anie tam jednego obiektu. Jest to oczywiœcie ten obiekt, który podajemy instrukcji throw.
+catch otrzymuje natomiast jego lokaln¹ kopiê - w podobny sposób, w jaki funkcje otrzymuj¹ kopie przekazanych im parametrów. Aby jednak tak siê sta³o, blok catch musi zadeklarowaæ, z jakiego typu obiektami chce pracowaæ:
+ 
+catch (typ obiekt)
+{
+   kod
+}
+ 
+W ten sposób bedzie mia³ dostêp do ka¿dego z³apanego obiektu wyj¹tku, który nale¿y do podanego typu. Da mu to mo¿liwoœæ wykorzystania go - chocia¿by po to, aby wyœwietliæ u¿ytkownikowi zawarte w nim informacje:
+ 
+try
+{
+   srand (static_cast<unsigned>(time(NULL)))
+ 
+   // losujemy rzucony wyj¹tek
+   switch (rand() % 4)
+   {
+         case 0:     throw "Wyjatek tekstowy";
+         case 1:     throw 1.5f;                  // wyj¹tek typu float
+         case 2:     throw -12;                   // wyj¹tek typu int
+         case 3:     throw (void*) NULL;          // pusty wskaŸnik
+   }
+}
+catch (int nZlapany)
+{
+   std::cout << "Zlapalem wyjatek liczbowy z wartoscia " << nZlapany;
+}
+ 
+Komunikaty o b³êdach powinny byæ w zasadzie kierowane do strumienia cerr, a nie cout. Tutaj jednak, dla zachowania prostoty, bêdê pos³ugiwa³ siê standardowym strumieniem wyjœcia. O pozosta³ych dwóch rodzajach strumieni wyjœciowych pomówimy w rozdziale o strumieniach STL.
+ 
+W tym kawa³ku kodu blok catch z³apie liczbê typu int - je¿eli takowa zostanie wyrzucona przez instrukcjê throw. Przechwyci j¹ w postaci lokalnej zmiennej nZlapany, aby potem wyœwietliæ jej wartoœæ w konsoli.
+ 
+A co z pozosta³ymi wyj¹tkami? Nie mamy instrukcji catch, które by je ³apa³y. Wobec tego zostan¹ one wyrzucone ze swej macierzystej funkcji i bêd¹ wêdrowa³y t¹ œcie¿k¹ a¿ do natrafienia pasuj¹cych bloków catch. Je¿eli ich nie znajd¹, spowoduj¹ zakoñczenie programu.
+Powinniœmy zatem zapewniæ obs³ugê tak¿e i tych wyj¹tków. Robimy w taki sposób, i¿ dopisujemy po prostu brakuj¹ce bloki catch:
+ 
+catch (const char szNapis[])
+{
+   std::cout << szNapis;
+}
+catch (float fLiczba)
+{
+   std::cout << "Zlapano liczbe: " << fLiczba;
+}
+catch (void* pWskaznik)
+{
+   std::cout << "Wpadl wskaznik " << pWskaznik;
+}
+ 
+Bloków catch, nazywanych procedurami obs³ugi wyj¹tków (ang. exception handlers), mo¿e byæ dowolna iloœæ. Wszystko zale¿y od tego, ile typów wyj¹tków zamierzamy przechwytywaæ.
+Kolejnoœæ bloków catch
+Obecnoœæ kilku bloków catch po jednej instrukcji try to powszechna praktyka. Dziêki niej mo¿na bowiem zabezpieczyæ siê na okolicznoœæ ró¿nych rodzajów wyj¹tków. Warto wiêc o tym porozmawiaæ.
+Dopasowywanie typu obiektu wyj¹tku
+
+Za³ó¿my wiêc, ¿e mamy tak¹ oto sekwencjê try-catch:
+ 
+try
+{
+   // rzucamy wyj¹tek
+   throw 90;
+}
+catch (float fLiczba)      { /* ... */ }
+catch (int nLiczba)        { /* ... */ }
+catch (double fLiczba)     { /* ... */ }
+ 
+W bloku try rzucamy jako wyj¹tek liczbê 90. Poniewa¿ nie podajemy jej ¿adnych przyrostków, kompilator uznaje, i¿ jest to wartoœæ typu int. Nasz obiekt wyj¹tku jest wiêc obiektem typu int, który leci na spotkanie swego losu.
+ 
+Gdzie siê zakoñczy jego droga?… Wszystko zale¿y od tego, który z trzech bloków catch przechwyci ten wyj¹tek. Wszystkie one s¹ do tego zdolne: typ int pasuje bowiem zarówno do typu float, jak i double (no i oczywiœcie int).
+Mówi¹c „pasuje”, mam tu na myœli dok³adnie taki sam mechanizm, jaki jest uruchamiany przy wywo³ywaniu funkcji z parametrami. Maj¹c bowiem trzy funkcje:
+ 
+void Funkcja1(float);
+void Funkcja2(int);
+void Funkcja3(double);
+ 
+ka¿dej z nich mo¿emy przekazaæ wartoœæ typu int. Naturalnie, jest on najbardziej zgodna z Funkcja2(), ale pozosta³e te¿ siê do tego nadaj¹. W ich przypadku zadzia³aj¹ po prostu wbudowane, niejawne konwersje: kompilator zamieni liczbê na int na typ float lub double.
+ 
+A jednak to tylko czêœæ prawdy. Zgodnoœæ typu wyj¹tku z typem zadeklarowanym w bloku catch to tylko jedno z kryterium wyboru - w dodatku wcale nie najwa¿niejsze! Otó¿ najpierw w grê wchodzi kolejnoœæ instrukcji catch. Kompilator przegl¹da je w takim samym porz¹dku, w jakim wystêpuj¹ w kodzie, i dla ka¿dej z nich wykonuje test dopasowania argumentu. Jeœli stwierdzi jak¹kolwiek zgodnoœæ (niekoniecznie najlepsz¹ mo¿liw¹), ignoruje wszystkie pozosta³e bloki catch i wybiera ten pierwszy pasuj¹cy.
+ 
+Co to znaczy w praktyce? Spójrzmy na nasz przyk³ad. Mamy obiekt typu int, który zostanie kolejno skonfrontowany z typami trzech bloków catch: float, int i double. Wobec przedstawionych wy¿ej zasad, który z nich zostanie wybrany?…
+OdpowiedŸ nie jest trudna. Ju¿ pierwsze dopasowanie int do float zakoñczy siê sukcesem. Nie bêdzie ono wprawdzie najlepsze (wymagaæ bêdzie niejawnej konwersji), ale, jak podkresli³em, kompilator poprzestanie w³aœnie na nim. Porz¹dek bloków catch weŸmie po prostu górê nad ich zgodnoœci¹.
+Pamiêtaj wiêc zasadê dopasowywania typu obiektu rzuconego do wariantów catch:
+ 
+Typy w blokach catch s¹ sprawdzane wedle ich kolejnoœci w kodzie, a wybierana jest pierwsza pasuj¹ca mo¿liwoœæ. Przy dopasowywania brane s¹ pod uwagê wszystkie niejawne konwersje.
+ 
+Szczególnie natomiast weŸ sobie do serca, i¿:
+ 
+Kolejnoœæ bloków catch czêsto ma znaczenie.
+ 
+Mimo ¿e z pozoru przypominaj¹ one funkcje, funkcjami nie s¹. Obowi¹zuj¹ w nich wiêc inne zasady wyboru w³aœciwego wariantu.
+Szczegó³y przodem
+
+Jak w takim razie nale¿y ustawiaæ procedury obs³ugi wyj¹tków, aby dzia³a³y one zgodnie z naszymi ¿yczeniami?… Popatrzmy wpierw na taki przyk³ad:
+ 
+try
+{
+   // ...
+   throw 16u;        // unsigned
+   // ...
+   throw -87;        // int
+   // ...
+   throw 9.242f;     // float
+   // ...
+   throw 3.14157;    // double
+}
+catch (double fLiczba)     { /* ... */ }
+catch (int nLiczba)        { /* ... */ }
+catch (float fLiczba)      { /* ... */ }
+catch (unsigned uLiczba)   { /* ... */ }
+ 
+Pytanie powinno tutaj brzmieæ: co jest Ÿle na tym obrazku? Domyœlasz siê, ¿e chodzi o kolejnoœæ bloków catch. SprawdŸmy.
+W bloku try rzucamy jeden z czterech wyj¹tków - typu unsigned, int, float oraz double. Co siê z nimi dzieje? Oczywiœcie trafiaj¹ do odpowiednich blobków catch… czy aby na pewno?
+ 
+Niezupe³nie. Wszystkie te liczby zostan¹ bowiem od razu dopasowane do pierwszego wariantu z parametrem double. Typ double swobodnie potrafi pomieœciæ wszystkie cztery typy liczbowe, zatem wszystkie cztery wyj¹tkie trafi¹ wy³¹cznie do pierwszego bloku catch! Pozosta³e trzy s¹ w zasadzie zbêdne!
+Kolejnoœæ procedur obs³ugi jest zatem nieprawid³owa. Poprawnie powinny byæ one u³o¿one w ten sposób:
+ 
+catch (unsigned uLiczba)   { /* ... */ }
+catch (int nLiczba)        { /* ... */ }
+catch (float fLiczba)      { /* ... */ }
+catch (double fLiczba)     { /* ... */ }
+ 
+To gwarantuje, ¿e wszystkie wyj¹tki trafi¹ do tych bloków catch, które im dok³adnie odpowiadaj¹. Korzystamy tu z faktu, ¿e:
+O       typ unsigned w pierwszym bloku przyjmie tylko wyj¹tki typu unsigned
+O       typ int w drugim bloku móg³by przej¹æ zarówno liczby typu unsigned, jak i int. Te pierwsz¹ s¹ jednak przechwycane przez poprzedni blok, zatem tutaj trafiaj¹ wy³¹cznie wyj¹tki faktycznego typu int
+O       typ float mo¿e przyj¹æ typy unsigned, int i float. Pierwsze dwa s¹ ju¿ jednak obs³u¿one, wiêc ten blok catch dostaje tylko „prawdziwe” liczby zmiennoprzecinkowe pojedynczej precyzji
+O       typ double pasuje do ka¿dej liczby, ale tutaj blok catch z tym typem dostanie jedynie te wyj¹tki, które s¹ faktycznie typu double. Pozosta³e liczby zostan¹ przechwycone przez poprzednie warianty
+ 
+Miêdzy typami unsigned, int, float i double zachodzi tu po prosta relacja polegaj¹ca na tym, ¿e ka¿dy z nich jest szczególnym przypadkiem nastêpnego:
+ 
+unsigned I int I float I double
+ 
+„Najbardziej szczególny” jest typ unsigned i dlatego on wystêpuje na pocz¹tku. Dalej mamy ju¿ coraz bardziej ogólne typy liczbowe.
+Taka zasada konstrurowania sekwencji bloków catch jest poprawna w ka¿dym przypadku, nie tylko dla typów liczbowych,
+ 
+Umieszczaj¹c kilka bloków catch jeden po drugim, zadbaj o to, aby wystêpowa³y one w porz¹dku rosn¹cej ogólnoœci. Niech najpierw pojawi¹ siê bloki o najbardziej wyspecjalizowanych typach, a dopiero potem typy coraz bardziej ogólne.
+ 
+Mo¿esz krêciæ nosem na takie nieœcis³e sformulowania. Bo i co to znaczy, ¿e dany typ jest ogólniejszy ni¿ inny?… W grê wchodz¹ tu niejawne konwersje - jak wiemy, kompilator stosuje je przy dopasowywaniu w blokach catch. Mo¿na zatem powiedzieæ, ¿e:
+ 
+Typ A jest ogólniejszy od typu B, je¿eli istnieje niejawna konwersja z B do A, niepowoduj¹ca utraty danych.
+ 
+W tym sensie double jest ogólniejszy od ka¿dego z typów: unsigned, int i float, poniewa¿ w ka¿dym przypadku istniej¹ niejawne konwersje standardowe, zamieniaj¹ce te typy na double. To zreszt¹ zgodne ze zdrowym rozs¹dkiem i wiedz¹ matematyczn¹, która mówi, nam ¿e liczby naturalne i ca³kowite s¹ tak¿e liczbami rzeczywistymi.
+Innym rodzajem konwersji, który bêdzie nas interesowa³ w tym rozdziale, jest zamiana odwo³ania do obiektu klasy pochodnej na odwo³anie do obiektu klasy bazowej. U¿yjemy jej do budowy hierarchii klas dla wyj¹tków.
+Zagnie¿d¿one bloki try-catch
+Wewn¹trz bloku try mo¿e znaleŸæ siê dowolny kod, jaki mo¿e byæ umieszczany we wszystkich blokach instrukcji C++. Przypisania, instrukcje warunkowe, pêtle, wywo³ania funkcji - wszystko to jest dopuszczalne. Co wiêcej, w bloku try mogê siê znaleŸæ… inne bloki try-catch. Nazywami je wtedy zagnie¿d¿onymi, zupe³nie tak samo jak zagnie¿d¿one instrukcje if czy pêtle.
+ 
+Formalnie sk³adnia takiego zagnie¿d¿enia mo¿e wygl¹daæ tak:
+ 
+try
+{
+   try
+   {
+         ryzykowne_instrukcje_wewnêtrzne
+   }
+   catch (typ_wewnêtrzny_1 obiekt_wewnêtrzny_1)
+   {
+         wewnêtrzne_instrukcje_obs³ugi_1
+   }
+   catch (typ_wewnêtrzny_2 obiekt_wewnêtrzny_2)
+   {
+         wewnêtrzne_instrukcje_obs³ugi_2
+   }
+   // ...
+ 
+   ryzykowne_instrukcje_zewnêtrzne
+}
+catch (typ_zewnêtrzny_1 obiekt_zewnêtrzny_1)
+{
+   zewnêtrzne_instrukcje_obs³ugi_1
+}
+catch (typ_zewnêtrzny_1 obiekt_zewnêtrzny_2)
+{
+   zewnêtrzne_instrukcje_obs³ugi_2
+}
+// ...
+ 
+dalsze_instrukcje
+ 
+Mimo pozornego skomplikowania jej funkcjonowanie jest intuicyjne. Je¿eli podczas wykonywania ryzykownych_instrukcji_wewnêtrznych rzucony zostanie wyj¹tek, to wpierw bêdzie on ³apany przez wewnêtrzne bloki catch. Dopiero gdy one przepuszcz¹ wyj¹tek, do pracy wezm¹ siê bloki zewnêtrzne.
+Je¿eli natomiast któryœ z zestawów catch (wewnêtrzny lub zewnêtrzny) wykona swoje zadanie, to program bêdzie kontynuowa³ od nastêpnych linijek po tym zestawie. Tak wiêc w przypadku, gdy wyj¹tek z³apie wewnêtrzny zestaw, wykonywane bêd¹ ryzykowne_instrukcje_zewnêtrzne; jeœli zewnêtrzny - dalsze_instrukcje.
+No a jeœli ¿aden wyj¹tek nie wyst¹pi? Wtedy wykonaj¹ siê wszystkie instrukcje poza blokami catch, czyli: ryzykowne_instrukcje_wewnêtrzne, ryzykowne_instrukcje_zewnêtrzne i wreszcie dalsze_instrukcje.
+ 
+Takie dos³owne zagnie¿d¿anie bloków try-catch jest w zasadzie rzadkie. Czêœciej wewnêtrzny blok wystêpuje w funkcji, której wywo³anie mamy w zewnêtrznym bloku. Oto przyk³ad:
+ 
+void FunkcjaBiblioteczna()
+{
+   try
+   {
+         // ...
+   }
+   catch (typ obiekt)
+   {
+         // ...
+   }
+   // ...
+}
+ 
+void ZwyklaFunkcja()
+{
+   try
+   {
+         FunkcjaBiblioteczna();
+         // ...
+   }
+   catch (typ obiekt)
+   {
+         // ...
+   }
+}
+ 
+Takie rozwi¹zanie ma prost¹ zaletê: FunkcjaBiblioteczna() mo¿e z³apaæ i obs³u¿yæ te wyj¹tki, z którymi sama sobie poradzi. Je¿eli nie potrzeba anga¿owaæ w to wywo³uj¹cego, jest to du¿a zaleta. Czêœæ wyj¹tków najprawdopodobniej jednak opuœci funkcjê - tylko tymi bêdzie musia³ zaj¹æ siê wywo³uj¹cy. Wewnêtrzne sprawy wywo³ywanej funkcji (tak¿e wyj¹tki) pozostan¹ jej wewnêtrznymi sprawami.
+Ogólnie mo¿na powiedzieæ, ¿e:
+ 
+Wyj¹tki powinny byæ ³apane w jak najbli¿szym od ich rzucenia miejscu, w którym mo¿liwe jest ich obs³u¿enie.
+ 
+O tej wa¿nej zasadzie powiemy sobie jeszcze przy okazji uwag o wykorzystaniu wyj¹tków.
+Z³apanie i odrzucenie
+
+Przy zagnie¿d¿aniu bloków try (niewa¿ne, czy z poœrednictwem funkcji, czy nie) mo¿e wyst¹piæ czêsta w praktyce sytuacja. Mo¿liwe jest mianowicie, ¿e po z³apaniu wyj¹tku przez bardziej wewnêtrzny catch nie potrafimy podj¹æ wszystkich akcji, jakie by³yby dla niego konieczne. Przyk³adowo, mo¿emy tutaj jedynie zarejestrowaæ go w dzienniku b³êdów; bardziej u¿yteczn¹ reakcjê powinien zaj¹æ siê „ktoœ wy¿ej”.
+Moglibyœmy pomin¹æ wtedy ten wewnêtrzny catch, ale jednoczeœnie pozbawilibyœmy siê mo¿liwoœci wczesnego zarejestrowania b³êdu. Lepiej wiêc pozostawiæ go na miejscu, a po zakoñczeniu zapisywania informacji o wyj¹tku wyrzuciæ go ponownie. Robimy to instrukcj¹ throw bez ¿adnych parametrów:
+ 
+throw;
+ 
+Ta instrukcja powoduje ponowne rzucenie tego samego obiektu wyj¹tku. Teraz jednak bêd¹ mog³y zaj¹æ siê nim bardziej zewnêtrzne bloki catch. Bêd¹ one pewnie bardziej kompetentne ni¿ nasze si³y szybkiego reagowania.
+Blok catch(...), czyli chwytanie wszystkiego
+
+W po³¹czeniu z zagnie¿d¿onymi blokami try i instrukcj¹ throw; czesto wystêpuje specjalny rodzaj bloku catch. Nazywany jest on uniwersalnym, a powstaje poprzez wpisanie po catch wielokropka (trzech kropek) w nawiasie:
+ 
+try
+{
+   // instrukcje
+}
+catch (...)
+{
+   // obs³uga wyj¹tków
+}
+ 
+Uniwersalnoœæ tego specjalnego rodzaju catch polega na tym, i¿ pasuj¹ do niego wszystkie obiekty wyj¹tków. Je¿eli kompilator, transportuj¹c wyj¹tek, natrafi na catch(...), to bezwarunkowo wybierze w³aœnie ten wariant, nie ogl¹daj¹c siê na ¿adne inne. catch(...) jest wiêc „wszystko¿erny”: poch³ania dowolne typy wyj¹tków.
+ 
+‘Poch³ania’ to zreszt¹ dobre s³owo. Wewn¹trz bloku catch(...) nie mamy mianowicie ¿adnych informacji o obiekcie wyj¹tku. Nie tylko o jego wartoœci, ani nawet o jego typie. Wiemy jedynie, ¿e jakiœ wyj¹tek wyst¹pi³ - i skromn¹ t¹ wiedz¹ musimy siê zadowoliæ.
+Po co nam wobec tego taki dziwny blokcatch?… Jest on przydatny tam, gdzie mo¿emy jakoœ wykorzystaæ samo powiadomienie o wyj¹tku, nie znaj¹c jednak jego typu ani wartoœci. Wewn¹trz catch(...) mo¿emy jedynie podjaæ pewne domyœlne dzia³ania. Mo¿emy na przyk³ad dokonaæ ma³ego zrzutu pamiêci (ang. memory dump), zapisuj¹c w bezpiecznym miejscu wartoœci zmiennych na wypadek zakoñczenia programu. Mo¿emy te¿ w jakiœ sposób przygotowaæ siê do w³aœciwej obs³ugi b³êdów.
+Cokolwiek zrobimy, na koniec powinniœmy przekazaæ wyj¹tek dalej, czyli u¿yæ konstrukcji:
+ 
+throw;
+ 
+Je¿eli tego nie zrobimy, to catch(...) zdusi w zarodku wszelkie wyj¹tki, nie pozwalaj¹c na to, by dotar³y one dalej.
+ 
+***
+ 
+Na tym koñcz¹ siê podstawowe informacje o mechanizmie wyj¹tków. To jednak nie wszystkie aspekty tej techniki. Musimy sobie jeszcze porozmawiaæ o tym, co dzieje siê miêdzy rzuceniem wyj¹tku poprzez throw i jego z³apaniem przy pomocy catch. Porozmawiamy zatem o odwijaniu stosu.
+Odwijanie stosu
+
+Odwijanie stosu (ang. stack unwinding) jest procesem œciœle zwi¹zanym z wyj¹tkami. Jakkolwiek sama jego istota jest raczej prosta, musimy wiedzeæ, jakie ma on konsekwencje w pisanym przez nas kodzie.
+Miêdzy rzuceniem a z³apaniem
+
+Odwijanie stosu rozpoczyna siê wraz z rzuceniem jakiegokolwiek wyj¹tku przy pomocy instrukcji throw i postêpuje a¿ do momentu natrafienia na pasuj¹cy do niego blok catch. W skrajnym przypadku odwijanie mo¿e doprowadziæ do zakoñczenia dzia³ania programu - jest tak jeœli odpowiednia procedura obs³ugi wyj¹tku nie zostanie znaleziona.
+Wychodzenie na wierzch
+
+Na czym jednak polega samo odwijanie?… Otó¿ mo¿na opisaæ je w skrócie jako wychodzenie punktu wykonania ze wszystkich bloków kodu. Co to znaczy, najlepiej wyjaœniæ na przyk³adzie.
+ 
+Za³ó¿my, ¿e mamy tak¹ oto sytuacjê:
+ 
+try
+{
+   for (/* ... */)
+   {
+         switch (/* ... */)
+         {
+               case 1:
+                     if (/* ... */)
+                     {
+                           // ...
+                           throw obiekt;
+                     }
+         }
+   }
+}
+catch
+{
+   // ...
+}
+ 
+Instrukcja throw wystêpuje to wewn¹trz 4 zagnie¿d¿onych w sobie bloków: try, for, switch i if. My oczywiœcie wiemy, ¿e najwa¿niejszy jest ten pierwszy, bo zaraz za nim wystêpuje procedura obs³ugi wyj¹tku - catch.
+Co siê dzieje z wykonywaniem programu, gdy nastêpuje sytuacja wyj¹tkowa? Otó¿ nie skacze on od razu do odpowiedniej instrukcji catch. By³oby to mo¿e najszybsze z punktu widzenia wydajnoœci, ale jednoczeœnie ca³kowicie niedopuszczalne. Dlaczego tak jest - o tym powiemy sobie w nastêpnym paragrafie.
+ 
+Jak wiêc postêpuje kompilator? Rozpoczyna to s³awetne odwijanie stosu, któremu poœwiêcony jest ca³y ten podrozdzia³. Dzia³a to mniej wiêcej tak, jakby dla ka¿dego bloku, w którym siê aktualnie znajdujemy, zadzia³a³a instrukcja break. Powoduje to wyjœcie z danego bloku.
+Po ka¿dej takiej operacji jest poza tym sprawdzana obecnoœæ nastêpuj¹cego dalej bloku catch. Je¿eli takowy jest obecny, i pasuje on do typu obiektu wyj¹tku, to wykonywana jest procedura obs³ugi wyj¹tku w nim zawarta. Proste i skuteczne :)
+ 
+Zobaczmy to na naszym przyk³adzie. Instrukcja throw znajduje siê tu przede wszystkim wewn¹trz bloku if - i to on bêdzie w pierwszej kolejnoœci odwiniêty. Potem nie zostanie znaleziony blok catch, zatem opuszczone zostan¹ tak¿e bloki switch, for i wreszcie try. Dopiero w tym ostatnim przypadku natrafimy na szukan¹ procedurê obs³ugi, która zostanie wykonana.
+Warto pamiêtaæ, ¿e - choæ nie widaæ tego na przyk³adzie - odwijanie mo¿e te¿ dotyczyæ funkcji. Je¿eli zajdzie koniecznoœæ odwiniêcia jej bloku, to sterowanie wraca do wywo³uj¹cego funkcjê.
+Porównanie throw z break i return
+Nieprzypadkowo porówna³em instrukcjê throw do break, a wczeœniej do return. Czas jednak zebraæ sobie cechy wyró¿niaj¹ce i odró¿niaj¹ce te trzy instrukcje. Oto stosowna tabela:
+ 
+instrukcja a
+cecha â
+throw
+break
+return
+przekazywanie sterowania
+do najbli¿szego pasuj¹cego bloku catch
+jeden blok wy¿ej (wyjœcie z pêtli lub bloku switch)
+zakoñczenie dzia³ania funkcji i powrót do kodu, który j¹ wywo³a³
+wartoœæ
+obiekt wyj¹tku dowolnego typu
+nie jest zwi¹zany z ¿adn¹ wartoœci¹
+wartoœæ tego samego typu, jaki zosta³ okreœlony w deklaracji funkcji
+zastosowanie
+obs³uga sytuacji wyj¹tkowych
+ogólne programowanie
+Tabela 20. Porównanie throw z break i return
+
+ 
+Wszystkie te trzy w³asnoœci trzech instrukcji s¹ bardzo wa¿ne i koniecznie musisz o nich pamiêtaæ. Nie bêdzie to chyba dla ciebie problemem, skoro dwie z omawianych instrukcji znasz doskonale, a o wszystkich aspektach trzeciej porozmawiamy sobie jeszcze ca³kiem obszernie.
+Wyj¹tek opuszcza funkcjê
+Rzucenie oraz z³apanie i obs³uga wyj¹tku mo¿e odbywaæ siê w ramach tej samej funkcji. Czêsto jednak mamy sytuacjê, w której to jedna funkcja sygnalizuje sytuacjê wyj¹tkow¹, a dopiero inna (wywo³uj¹ca j¹) zajmuje siê reakcj¹ na zainstnia³y problem. Jest to zupe³nie dopuszczalne, co zreszt¹ parokrotnie podkreœla³em.
+ 
+W procesie odwijania stosu obiekt wyj¹tku mo¿e wiêc opuœciæ swoj¹ macierzyst¹ funkcjê. Nie jest to ¿aden b³¹d, lecz normalna praktyka. Nie zwalnia ona jednak z obowi¹zku z³apania wyj¹tku: nadal ktoœ musi to zrobiæ. Ktoœ - czyli wywo³uj¹cy funkcjê.
+Specyfikacja wyj¹tków
+
+Aby jednak mo¿na by³o to uczyniæ, nale¿y wiedzieæ, jakiego typu wyj¹tki funkcja mo¿e wyrzucaæ na zewn¹trz. Dziêki temu mo¿emy opakowaæ jej przywo³anie w blok try i dodaæ za nim odpowiednie instrukcje catch, chwytaj¹ce w³aœciwe obiekty.
+ 
+Sk¹d mamy uzyskaæ tê tak potrzebn¹ wiedzê? Wydawa³oby siê, ¿e nic prostszego. Wystarczy przejrzeæ kod funkcji, znaleŸæ wszystkie instrukcje throw i okreœliæ typ obiektów, jakie one rzucaj¹. Nastêpnie nale¿y odrzuciæ te, które s¹ obs³ugiwane w samej funkcji i zaj¹æ siê tylko wyj¹tkami, które z niej „uciekaj¹”.
+Ale to tylko teoria i ma ona jedn¹ powa¿n¹ s³abostkê. Wymaga przecie¿ dostêpu do kodu Ÿród³owego funkcji, a ten nie musi byæ wcale osi¹galny. Wiele bibliotek jest dostarczanych w formie skompilowanej, zatem nie ma szans na ujrzenie ich wnêtrza. Mimo to ich funkcjom nikt ca³kowicie nie zabroni rzucania wyj¹tków.
+ 
+Dlatego nale¿a³o jakoœ rozwi¹zaæ ten problem. Uzupe³niono wiêc deklaracje funkcji o dodatkow¹ informacjê - specyfikacjê wyj¹tków.
+ 
+Specyfikacja albo wyszczególnienie wyj¹tków (ang. exceptions’ specification) mówi nam, czy dana funkcja wyrzuca z siebie jakieœ nieobs³u¿one obiekty wyj¹tków, a jeœli tak, to informuje tak¿e o ich typach.
+ 
+Takie wyszczególnienie jest czêœci¹ deklaracji funkcji - umieszczamy je na jej koñcu, np.:
+ 
+void Znajdz(int* aTablica, int nLiczba) throw(void*);
+ 
+Po liœcie parametrów (oraz ewentualnych dopiskach typu const w przypadku metod klasy) piszemy po prostu s³owo throw. Dalej umieszczamy w nawiasie listê typów wyj¹tków, które bêd¹ opuszcza³y funkcjê i których z³apanie bêdzie nale¿a³o do obowi¹zków wywo³uj¹cego. Oddzielamy je przecinkami.
+Ta lista typów jest nieobowi¹zkowa, podobnie zreszt¹ jak ca³a fraza throw(). S¹ to jednak dwa szczególne przypadki - wygl¹daj¹ one tak:
+ 
+void Stepuj();
+void Spiewaj() throw();
+ 
+Brak specyfikacji oznacza tyle, i¿ dana funkcja mo¿e rzucaæ na zewn¹trz wyj¹tki dowolnego typu. Natomiast podanie throw bez okreœlenia typów wyj¹tków informuje, ¿e funkcja w ogóle nie wyrzuca wyj¹tków na zewn¹trz. Widz¹c tak zadeklarowan¹ funkcjê mo¿emy wiêc mieæ pewnoœæ, ¿e jej wywo³ania nie trzeba umieszczaæ w bloku try i martwiæ siê o obs³ugê wyj¹tków przez catch.
+ 
+Specyfikacja wyj¹tków jest czêœci¹ deklaracji funkcji, zatem bêdzie ona wystêpowaæ np. w pliku nag³ówkowym zewnêtrznej biblioteki. Jest to bowiem niezbêdna informacja, potrzebna do korzystania z funkcji - podobnie jak jej nazwa czy parametry. Kiedy jednak tamte wiadomoœci podpowiadaj¹, w jaki sposób wywo³ywaæ funkcjê, wyszczególnienie throw() mówi nam, jakie wyj¹tki musimy przy okazji tego wywo³ania obs³ugiwaæ.
+Warto te¿ podkreœliæ, ¿e mimo swej obecnoœci w deklaracji funkcji, specyfikacja wyj¹tków nie nale¿y do typu funkcji. Do niego nadal zaliczamy wy³¹cznie listê parametrów oraz typ wartoœci zwracanej. Na pokazane wy¿ej funkcje Stepuj() i Spiewaj() mo¿na wiêc pokazywaæ tym samym wskaŸnikiem.
+K³amstwo nie pop³aca
+
+Specyfikacja wyj¹tków jest przyczeniem z³o¿onym przez twórcê funkcji jej u¿ytkownikowi. W ten sposób autor procedury zaœwiadcza, ¿e jego dzie³o bêdzie wyrzuca³o do wywo³uj¹cego wyj¹tki wy³¹cznie podanych typów.
+ 
+Niestety, ¿ycie i programowanie uczy nas, ¿e niektóre obietnice mog¹ byæ tylko obiecankami. Za³ó¿my na przyk³ad, ¿e w nowej wersji biblioteki, z której pochodzi funkcja, dokonano pewnych zmian. Teraz rzucany jest jeszcze jeden, nowy typ wyj¹tków, którego obs³uga spada na wywo³uj¹cego.
+Zapomniano jednak zmieniæ deklaracjê funkcji - wygl¹da ona nadal np. tak:
+ 
+bool RobCos() throw(std::string);
+ 
+Obiecywanym typem wyj¹tków jest tu tylko i wy³¹cznie std::string. Przypuœæmy jednak, ¿e w wyniku poczynionych zmian funkcja mo¿e teraz rzucaæ tak¿e liczby typu int - typu, którego nazwa nie wystêpuje w specyfikacji wyj¹tków.
+ 
+Co siê wtedy stanie? Czy wyst¹pi b³¹d?… Powiedzmy. Jednak to nie kompilator nam o nim powie. Nie zrobi tego nawet linker. Otó¿:
+ 
+O rzuceniu przez funkcjê niezadeklarowanego wyj¹tku dowiemy siê dopiero w czasie dzia³ania programu.
+ 
+Wygl¹da to tak, i¿ program wywo³a wtedy specjaln¹ funkcjê unexpected() (‘niespodziewany’). Jest to funkcja biblioteczna, uruchamiana w reakcji na niedozwolony wyj¹tek.
+Co robi ta funkcja? Otó¿… wywo³uje ona drug¹ funkcjê, terminate() (‘przerwij’). O niej bêdziemy jeszcze rozmawiaæ przy okazji niez³apanych wyj¹tków. Na razie zapamiêtaj, ¿e funkcja ta po prostu koñczy dzia³anie programu w ma³o porz¹dny sposób.
+ 
+Wyrzucenie przez funkcjê niezadeklarowanego wyj¹tku koñczy siê awaryjnym przerwaniem dzia³ania programu.
+ 
+Spytasz pewnie: „Dlaczego tak drastycznie?” Taka reakcja jest jednak uzasadniona, gdy¿ do czynienia ze zwyczajnym oszustwem.
+Oto ktoœ (twórca funkcji) deklaruje, ¿e bêdzie ona wystrzeliwaæ z siebie wy³¹cznie okreœlone typy wyj¹tków. My pos³usznie podporz¹dkowujemy siê tej obietnicy: ujmujemy wywo³anie funkcji w blok try i piszemy odpowiednie bloki catch. Wszystko robimy zgodnie ze specyfikacj¹ throw().
+Tymczasem zostajemy oszukani. Obietnica zosta³a z³amana: funkcja rzuca nam wyj¹tek, którego siê zupe³nie nie spodziewaliœmy. Nie mamy wiêc kodu jego obs³ugi - albo nawet gorzej: mamy go, ale nie tam gdzie trzeba. W ka¿dym przypadku jest to sytuacja nie do przyjêcia i stanowi wystarczaj¹c¹ podstawê do zakoñczenia dzia³ania programu.
+ 
+To domyœlne mo¿emy aczkolwiek zmieniæ. Nie zaleca siê wprawdzie, aby mimo niespodziewanego wyj¹tku praca programu by³a kontynuowana. Je¿eli jednak napiszemy w³asn¹ wersjê funkcji unexpected(), bêdziemy mogli odró¿niæ dwie sytuacje:
+O       niez³apany wyj¹tek - czyli taki wyj¹tek, którego nie schwyci³ ¿aden blok catch
+O       nieprawid³owy wyj¹tek - taki, który nie powinien siê wydostaæ z funkcji
+ 
+Ró¿nica jest bardzo wa¿na, bowiem w tym drugim przypadku nie jesteœmy winni zaistnia³emu problemu. Dok³adniej mówi¹c, nie jest winny kod wywo³uj¹cy funkcjê - przyczyna tkwi w samej funkcji, a zawini³ jej twórca. Jego obietnice dotycz¹ce wyj¹tków okaza³y siê obietnicami bez pokrycia.
+Rozdzielenie tych dwóch sytuacji pozwoli nam uchroniæ siê przed poprawianiem kodu, który byæ mo¿e wcale tego nie wymaga. Z powodu niezadeklarowanego wyj¹tku nie ma bowiem potrzeby dokonywania zmian w kodzie wywo³uj¹cym funkcjê. PóŸniej bêd¹ one oczywiœcie konieczne; póŸniej - to znaczy wtedy, gdy powiadomimy twórcê funkcjê o jego niekompetencji, a ten z pokor¹ naprawi swój b³¹d.
+ 
+Jak zatem mo¿emy zmieniæ domyœln¹ funkcjê unexpected()? Czynimy to… wywo³uj¹c inn¹ funkcjê - set_unexpected():
+ 
+unexpected_handler set_unexpected(unexpected_handler pfnFunction);
+ 
+Tym, który ta funkcja przyjmuje i zwraca, to unexpected_handler. Jest to alias ta wskaŸnik do funkcji: takiej, która nie bierze ¿adnych parametrów i nie zwraca ¿adnej wartoœci.
+Poprawn¹ wersj¹ funkcji unexpected() mo¿e wiêc byæ np. taka funkcja:
+ 
+void MyUnexpected()
+{
+   std::cout << "--- UWAGA: niespodziewany wyj¹tek ---" << std::endl;
+   exit (1);
+}
+ 
+Po przekazaniu jej do set_unexpected():
+ 
+set_unexpected (MyUnexpected);
+ 
+bêdziemy otrzymywali stosown¹ informacjê w przypadku wyrzucenia niedozwolonego wyj¹tku przez jak¹kolwiek funkcjê programu.
+Niez³apany wyj¹tek
+Przekonaliœmy siê, ¿e proces odwijania stosu mo¿e doprowadziæ do przerwania dzia³ania funkcji i poznaliœmy tego konsekwencje. Nieprawid³owe sygnalizowanie lub obs³uga wyj¹tków mog¹ nam jednak sprawiæ jeszcze jedn¹ niespodziankê.
+Odwijanie mo¿e siê mianowicie zakoñczyæ niepowodzeniem, jeœli ¿aden pasuj¹cy blok catch nie zostanie znaleziony. Mówimy wtedy, ¿e wyst¹pi³ nieobs³u¿ony wyj¹tek.
+ 
+Co nastêpuje w takim wypadku? Otó¿ program wywo³uje wtedy funkcjê terminate(). Jej nazwa wskazuje, ¿e powoduje ona przerwanie programu. Faktycznie funkcja ta wywo³uje inn¹ funkcjê - abort() (‘przestañ’). Ona zaœ powoduje brutalne i nieznosz¹ce ¿adnych kompromisów przerwanie dzia³ania programu. Po jej wywo³aniu mo¿emy w oknie konsoli ujrzeæ komunikat:
+ 
+Abnormal program termination
+ 
+Taki te¿ napis bêdzie po¿egnaniem z programem, w którym wyst¹pi niez³apany wyj¹tek. Mo¿emy to jednak zmieniæ, pisz¹c w³asn¹ wersjê funkcji terminate().
+ 
+Do ustawienia nowej wersji s³u¿y funkcja set_terminate(). Jest ona bardzo podobna do analogicznej funkcji set_unexpected():
+ 
+terminate_handler set_terminate(terminate_handler pfnFunction);
+ 
+Wystêpuj¹cy tu alias terminate_handler jest tak¿e wskaŸnikiem na funkcjê, która nic nie bierze i nie zwraca. W parametrze set_terminate() podajemy wiêc wskaŸnik do nowej funkcji terminate(), a w zamian otrzymujemy wskaŸnik do starej - zupe³nie jak w set_unexpected().
+Oto przyk³adowa funkcja zastêpcza:
+ 
+void MyTerminate()
+{
+   std::cout << "--- UWAGA: blad mechanizmu wyjatkow ---" << std::endl;
+   exit (1);
+}
+ 
+Wypisywany przez nas komunikat jest tak ogólny (nie brzmi np. "niezlapany wyjatek"), poniewa¿ terminate() jest wywo³ywana tak¿e w nieco innych sytuacjach, ni¿ niez³apany wyj¹tek. Powiemy sobie o nich we w³aœciwym czasie.
+ 
+Zastosowana tutaj, jak w i MyUnexpected() funkcja exit() s³u¿y do normalnego (a nie awaryjnego) zamkniêcie programu. Podajemy jej tzw. kod wyjœcia (ang. exit code) - zwyczajowo zero oznacza wykonanie bez b³êdów, inna wartoœæ to nieprawid³owe dzia³anie aplikacji (tak jak u nas).
+Porz¹dki
+
+Odwijanie stosu jest w praktyce bardziej z³o¿onym procesem ni¿ to siê wydaje. Oprócz przetransportowania obiektu wyj¹tku do stosownego bloku catch kompilator musi bowiem zadbaæ o to, aby reszta programu nie dozna³a przy okazji jakichœ obra¿eñ.
+O co chodzi? O tym porozmawiamy sobie w tym paragrafie.
+Niszczenie obiektów lokalnych
+Wspominaj¹c o opuszczaniu kolejno zagnie¿d¿onych bloków czy nawet funkcji, pos³u¿y³em siê porównaniu z break i return. throw ma z nimi jeszcze jedn¹ cechê wspóln¹ - nie licz¹c tych odró¿niaj¹cych.
+ 
+Wychodzenie z bloków przebiega mianowicie w sposób ca³kiem „czysty” - tak jak w normalnym kodzie. Oznacza, to ¿e wszystkie stworzone obiekty lokalne s¹ niszczone, a ich pamiêæ zwalniania.
+W przypadku typów podstawowych oznacza to po prostu usuniêcie zmiennych z pamiêci. Dla klas mamy jeszcze wywo³ywanie destruktorów i wszystkie tego konsekwencje.
+ 
+Mo¿na zatem powiedzieæ, ¿e:
+ 
+Opuszczanie bloków kodu dokonywane podczas odwijania stosu przebiega tak samo, jak to siê dzieje podczas normalnego wykonywania programu. Obiekty lokalne s¹ wiêc niszczone poprawnie.
+ 
+Sama nazwa ‘odwijanie stosu’ pochodzi zreszt¹ od tego sprz¹tania, dokonywanego przy okazji „wychodzenia na wierzch” programu. Obiekty lokalne (zwane te¿ automatycznymi) s¹ bowiem tworzone na stosie, a jego odwiniêcie to w³aœnie usuniêcie tych obiektów oraz powrót z wywo³ywanych funkcji.
+Wypadki przy transporcie
+To niszczenie obiektów lokalnych mo¿e siê wydawaæ tak oczywiste, ¿e nie warto poœwiêcaæ temu a¿ osobnego paragrafu. Jest jednak coœ na rzeczy: czynnoœæ ta mo¿e byæ bowiem powodem pewnych problemów, je¿eli nie bêdziemy jej œwiadomi. Jakich problemów?…
+Niedozwolone rzucenie wyj¹tku
+
+Musimy powiedzieæ sobie o jednej bardzo wa¿nej zasadzie zwi¹zanej z mechanizmem wyj¹tków w C++. Brzmi ona:
+ 
+Nie nale¿y rzucaæ nastêpnego wyj¹tku w czasie, gdy kompilator zajmuje siê obs³ug¹ poprzedniego.
+ 
+Co to znaczy? Czy nie mo¿emy u¿ywaæ instrukcji throw w blokach catch?…
+Otó¿ nie - jest to dozwolone, ale w sumie nie o tym chcemy mówiæ :) Musimy sobie powiedzieæ, co rozumiemy poprzez „obs³ugê wyj¹tku dokonywan¹ przez kompilator”.
+ 
+Dla nas obs³ug¹ wyj¹tku jest kod w bloku catch. Aby jednak móg³ on byæ wykonany, obiekt wyj¹tku oraz punkt sterowania programu musz¹ tam trafiæ. Tym zajmuje siê kompilator - to jest w³aœnie jego obs³uga wyj¹tku: dostarczenie go do bloku catch. Dalej nic go ju¿ nie obchodzi: kod z bloku catch jest traktowany jako normalne instrukcje, bowiem sam kompilator uznaje ju¿, ¿e z chwil¹ rozpoczêcia ich wykonywania jego praca zosta³a wykonana. Wyj¹tek zosta³ przyniesiony i to siê liczy.
+Tak wiêc:
+ 
+Obs³uga wyj¹tku dokonywana przez kompilator polega na jego dostarczeniu go do odpowiedniego bloku catch przy jednoczesnym odwiniêciu stosu.
+ 
+Teraz ju¿ wiemy, na czym polega zastrze¿enie podane na pocz¹tku. Nie mo¿emy rzuciæ nastêpnego wyj¹tku w chwili, gdy kompilator zajmuje siê jeszcze transportem poprzedniego. Inaczej mówi¹c, miêdzy wykonaniem instrukcji throw a obs³ug¹ wyj¹tku w bloku catch nie mo¿e wystapiæ nastêpna instrukcja throw.
+Strefy bezwyj¹tkowe
+
+„No dobrze, ale w³aœciwie co z tego? Przecie¿ po rzuceniu jednego wyj¹tku wszystkim zajmuje siê ju¿ kompilator. Jak wiêc moglibyœmy rzuciæ kolejny wyj¹tek, zanim ten pierwszy dotrze do bloku catch?…”
+Faktycznie, tak mog³oby siê wydawaæ. W rzeczywistoœci istniej¹ a¿ dwa miejsca, z których mo¿na rzuciæ drugi wyj¹tek.
+ 
+Jeœli chodzi o pierwsze, to pewnie siê go domyœlasz, je¿eli uwa¿nie czyta³eœ opis procesu odwijania stosu i zwi¹zanego z nim niszczenia obiektów lokalnych. Powiedzia³em tam, ¿e przebiega ono w identyczny sposób, jak normalnie. Pamiêæ jest zawsze zwalniania, a w przypadku obiektów klas wywo³ywane s¹ destruktory.
+Bingo! Destruktory s¹ w³aœnie tymi procedurami, które s¹ wywo³ywane podczas obs³ugi wyj¹tku dokonywanej przez kompilator. A zatem nie mo¿emy wyrzucaæ z nich ¿adnych wyj¹tków, poniewa¿ mo¿e zdarzyæ, ¿e dany destruktor jest wywo³ywany podczas odwijania stosu.
+ 
+Nie rzucaj wyj¹tków z destruktorów.
+ 
+Druga sytuacja jest bardziej specyficzna. Wiemy, ¿e mechanizm wyj¹tków pozwala na rzucanie obiektów dowolnego typu. Nale¿¹ do nich tak¿e obiekty klas, które sami sobie zdefiniujemy. Definiowanie takich specjalnych klas wyj¹tków to zreszt¹ bardzo po¿¹dana i rozs¹dna praktyka. Pomówimy sobie jeszcze o niej.
+Jednak niezale¿nie od tego, jakiego rodzaju obiekty rzucamy, kompilator z ka¿dym postêpuje tak samo. Podczas transportu wyj¹tku do catch czyni on przynajmniej jedn¹ kopiê obiektu rzucanego. W przypadku typów podstawowych nie jest to ¿aden problem, ale dla klas wykorzystywane s¹ normalne sposoby ich kopiowania. Znaczy to, ¿e mo¿e zostaæ u¿yty konstruktor kopiuj¹cy - nasz w³asny.
+Mamy wiêc drugie (i na szczêœcie ostatnie) potencjalne miejsce, sk¹d mo¿na rzuciæ nowy wyj¹tek w trakcie obs³ugi starego. Pamiêtajmy wiêc o ostrze¿eniu:
+ 
+Nie rzucajmy nowych wyj¹tków z konstruktorów kopiuj¹cych klas, których obiekty rzucamy jako wyj¹tki.
+ 
+Z tych dwóch miejsc (wszystkie destruktory i konstruktory kopiuj¹ce obiektów rzucanych) nie powinniœmy rzucaæ ¿adnych wyj¹tków. W przeciwnym wypadku kompilator uzna to za bardzo powa¿ny b³¹d. Zaraz siê przekonamy, jak powa¿ny…
+ 
+Biblioteka Standardowa udostêpnia prost¹ funkcjê uncaught_exception(). Zwraca ona true, je¿eli kompilator jest w trakcie obs³ugi wyj¹tku. Mo¿na jej u¿yæ, jeœli koniecznie musimy rzuciæ wyj¹tek w destruktorze; oczywiœcie powinniœmy to zrobiæ tylko wtedy, gdy funkcja zwróci false.
+Prototyp tej funkcji znajduje siê w pliku nag³ówkowym exception w przestrzeni nazw std.
+Skutki wypadku
+
+Co siê stanie, je¿eli zignorujemy któryœ z zakazów podanych wy¿ej i rzucimy nowy wyj¹tek w trakcie obs³ugi innego?…
+ 
+Bêdzie to wtedy bardzo powa¿na sytuacja. Oznaczaæ ona bêdzie, ¿e kompilator nie jest w stanie poprawnie przeprowadziæ obs³ugi wyj¹tku. Inaczej mówi¹c, mechanizm wyj¹tków zawiedzie - tyle ¿e bêdzie to rzecz jasna nasza wina.
+Co mo¿e wówczas zrobiæ kompilator? Niewiele. Jedyne, co wtedy czyni, to wywo³anie funkcji terminate(). Skutkiem jest wiêc nieprzewidziane zakoñczenie programu.
+ 
+Naturalnie, zmiana funkcji terminate() (poprzez set_terminate()) sprawi, ¿e zamiast domyœlnej bêdzie wywo³ywana nasza procedura. Pisz¹c j¹ powinniœmy pamiêtaæ, ¿e funkcja terminate() jest wywo³ywana w dwóch sytuacjach:
+O       gdy wyj¹tek nie zosta³ z³apany przez ¿aden blok catch
+O       gdy zosta³ rzucony nowy wyj¹tek w trakcie obs³ugi poprzedniego
+ 
+Obie s¹ sytuacjami krytycznymi. Zatem niezale¿nie od tego, jakie dodatkowe akcje bêdziemy podejmowaæ w naszej funkcji, zawsze musimy na koniec zamkn¹æ nasz program. W aplikacjach konsolowych mo¿na uczyniæ to poprzez exit().
+Zarz¹dzanie zasobami w obliczu wyj¹tków
+
+Napisa³em wczeœniej, ¿e transport rzuconego wyj¹tku do bloku catch powoduje zniszczenie wszystkich obiektów lokalnych znajduj¹cych siê „po drodze”. Nie musimy siê o to martwiæ; zreszt¹, nie troszczyliœmy siê o nie tak¿e i wtedy, gdy nie korzystaliœmy z wyj¹tków.
+ 
+Obiekty lokalne nie s¹ jednak jedynymi z jakich korzystamy w C++. Wiemy te¿, ¿e mo¿liwe jest dynamiczne tworzenie obiektów na stercie, czyli w rezerwuarze pamiêci. Dokonujemy tego poprzez new.
+Pamiêæ jest z kolei jednym z tak zwanych zasobów (ang. resources), czyli zewnêtrznych „bogactw naturalnych” komputera. Mo¿emy do nich zaliczyæ nie tylko pamiêæ operacyjn¹, ale np. otwarte pliki dyskowe, wy³¹cznoœæ na wykorzystanie pewnych urz¹dzeñ lub aktywne po³¹czenia internetowe. W³aœciwe korzystanie z takich zasobów jest jednym z zadañ ka¿dego powa¿nego programu.
+ 
+Zazwyczaj odbywa siê ono wed³ug prostego schematu:
+O       najpierw pozyskujemy ¿¹dany zasób w jakiœ sposób (np. alokujemy pamiêæ poprzez new)
+O       potem mo¿emy do woli korzystaæ z tego zasobu (np. zapisywac dane do pamiêci)
+O       na koniec zwalniamy zasób, je¿eli nie jest ju¿ nam potrzebny (czyli korzystamy z delete w przypadku pamiêci)
+ 
+Najbardziej znany nam zasob, czyli pamiêæ opercyjna, jest przez nas wykorzystywany choæby tak:
+ 
+CFoo* pFoo = new CFoo;     // alokacja (utworzenie) obiektu-zasobu
+// (robimy coœ...)
+delete pFoo;               // zwolnienie obiektu-zasobu
+ 
+Miêdzy stworzeniem a zniszczeniem obiektu mo¿e jednak zajœæ sporo zdarzeñ. W szczególnoœci: mo¿liwe jest rzucenie wyj¹tku.
+Co siê wtedy stanie?… Wydawaæ by siê mog³o, ¿e obiekt zostanie zniszczony, bo przecie¿ tak by³o zawsze… B³¹d! Obiekt, na który wskazuje pFoo nie zostanie zwolniony z prostego powodu: nie jest on obiektem lokalnym, rezyduj¹cym na stosie, lecz tworzonym dynamicznie na stercie. Sami wydajemy polecenie jego utworzenia (new), wiêc równie¿ sami musimy go potem usun¹æ (poprzez delete). Zostanie natomiast zniszczony wskaŸnik na niego (zmienna pFoo), bo jest to zmienna lokalna -  co aczkolwiek nie jest dla nas ¿adn¹ korzyœci¹.
+ 
+Mo¿esz zapytaæ: „A w czym problem? Skoro pamiêæ nale¿y zwolniæ, to zróbmy to przed rzuceniem wyj¹tku - o tak:
+ 
+try
+{
+   CFoo* pFoo = new CFoo;
+ 
+   // ...
+   if (warunek_rzucenia_wyj¹tku)
+   {
+         delete pFoo;
+         throw wyj¹tek;
+   }
+   // ...
+ 
+   delete pFoo;
+}
+catch (typ obiekt)
+{
+   // ...
+}
+ 
+To powinno rozwi¹zaæ problem.”
+Taki sposób to jednak oznaka skrajnego i niestety nieuzasadnionego optymizmu. Bo kto nam zagwarantuje, ¿e wyj¹tki, które mog¹ nam przeszkadzaæ, bêd¹ rzucane wy³¹cznie przez nas?… Mo¿emy przecie¿ wywo³aæ jak¹œ zewnêtrzn¹ funkcjê, która sama bêdzie wyrzuca³a wyj¹tki - nie pytaj¹c nas o zgodê i nie bacz¹c na nasz¹ zaalokowan¹ pamiêæ, o której przecie¿ nic nie wie!
+„To te¿ nie katastrofa”, odpowiesz, „Mo¿emy przecie¿ wykryæ rzucenie wyj¹tku i w odpowiedzi zwolniæ pamiêæ:
+ 
+try
+{
+   CFoo* pFoo = new CFoo;
+ 
+   // ...
+   try
+   {
+         // wywo³anie funkcji potencjalnie rzucaj¹cej wyj¹tki
+         FunkcjaKtoraMozeWyrzucicWyjatek();
+   }
+   catch (...)
+   {
+         // niszczymy obiekt
+         delete pFoo;
+ 
+         // rzucamy dalej otrzymany wyj¹tek
+         throw;
+   }
+   // ...
+ 
+   delete pFoo;
+}
+catch (typ obiekt)
+{
+   // ...
+}
+ 
+ 
+Blok catch(...) z³apie nam wszystkie wyj¹tki, a my w jego wnêtrzu zwolnimy pamiêæ i rzucimy je dalej poprzez throw;. Wszystko proste, czy¿ nie?”
+Brawo, twoja pomys³owoœæ jest ca³kiem du¿a. Ju¿ widzê te dziesi¹tki wywo³añ funkcji bibliotecznych, zamkniêtych w ich w³asne bloki try-catch(...), które dbaj¹ o zwalnianie pamiêci… Jak s¹dzisz, na ile eleganckie, efektywne (zarówno pod wzglêdem czasu wykonania jak i zakodowania) i ³atwe w konserwacji jest takie rozwi¹zanie?…
+ 
+Je¿eli zastanowisz siê nad tym choæ trochê d³u¿sz¹ chwilê, to zauwa¿ysz, ¿e to bardzo z³e wyjœcie. Jego stosowanie (podobnie zreszt¹ jak delete przed throw) jest œwiadectwem koszmarnego stylu programowania. Pomyœlmy tylko, ¿e wymaga to wielokrotnego napisania instrukcji delete - powoduje to, ¿e kod staje siê bardzo nieczytelny: na pierwszy rzut oka mo¿na pomyœleæ, ¿e kilka(naœcie) razy usuwany jest obiekt, który tworzymy tylko raz. Poza tym obecnoœæ tego samego kodu w wielu miejscach znakomicie utrudnia jego zmianê.
+Byæ mo¿e teraz pomyœla³eœ o preprocesorze i jego makrach… Jeœli naprawdê chcia³byœ go zastosowaæ, to bardzo proszê. Potem jednak nie narzekaj, ¿e wyprodukowa³eœ kod, który stanowi zagadkê dla jasnowidza.
+ 
+Teraz mo¿esz siê oburzyæ: „No to co nale¿y zrobiæ?! Przecie¿ nie mo¿emy dopuœciæ do powstawania wycieków pamiêci czy niezamykania plików! Mo¿e nale¿y po prostu zrezygnowaæ z tak nieprzyjaznego narzêdzia, jak wyj¹tki?” Có¿, mo¿emy nie lubiæ wyj¹tków (szczególnie w tej chwili), ale nigdy od nich nie uciekniemy. Je¿eli sami nie bêdziemy ich stosowaæ, to u¿yje ich ktoœ inny, którego kodu my bêdziemy potrzebowali.
+Na wyj¹tki nie powinniœmy siê wiêc obra¿aæ, lecz spróbowaæ je zrozumieæ. Rozwi¹zanie problemu zasobów, które zaproponowaliœmy wy¿ej, jest z³e, poniewa¿ próbuje wtr¹ciæ siê w automatyczny proces odwijania stosu ze swoim rêcznym zwalnianiem zasobów (tutaj pamiêci). Nie têdy droga; nale¿y raczej zastosowaæ tak¹ metodê, która pozwoli nam czerpaæ korzyœci z automatyki wyj¹tków.
+Teraz poznamy w³aœciwy sposób dokonania tego.
+ 
+Problem z niezwolnionymi zasobami wystêpuje we wszystkich jêzykach, w których funkcjonuj¹ wyj¹tki. Trzeba jednak przyznaæ, ¿e w wiêkszoœci z nich poradzono sobie z nim znacznie lepiej ni¿ w C++. Przyk³adowo, Java i Object Pascal posiadaj¹ mo¿liwoœæ zdefiniowania dodatkowego (obok catch) bloku finally (‘nareszcie’). W nim zostaje umieszczany kod wykonywany zawsze - niezale¿nie od tego, czy wyj¹tek w try wyst¹pi³, czy te¿ nie. Jest to wiêc idealne miejsce na instrukcje zwalniaj¹ce zasoby, pozyskane w bloku try. Mamy bowiem gwarancjê, i¿ zostan¹ one poprawnie oddane niezale¿nie od okolicznoœci.
+Opakowywanie
+
+Pomys³ jest doœæ prosty. Jak wiemy, podczas odwijania stosu niszczone s¹ wszystkie obiekty lokalne. W przypadku, gdy s¹ to obiekty naszych w³asnych klas, do pracy ruszaj¹ wtedy destruktory tych klas. W³aœnie we wnêtrzu tych destruktorów mo¿emy umieœciæ kod zwalniaj¹cy przydzielon¹ pamiêæ czy jakikolwiek inny zasób.
+Wydaje siê to podobne do rêcznego zwalniania zasobów przed rzuceniem wyj¹tku lub w blokach catch(...). Jest jednak jedna bardzo wa¿na ró¿nica: nie musimy tutaj wiedzieæ, w którym dok³adnie miejscu wyst¹pi wyj¹tek. Kompilator bowiem i tak wywo³a destruktor obiektu - niewa¿ne, gdzie i jaki wyj¹tek zosta³ rzucony.
+ 
+Skoro jednak mamy u¿ywaæ destruktorów, to trzeba rzecz jasna zdefiniowaæ jakieœ klasy. Potem zaœ nale¿y w bloku try tworzyæ obiekty tych¿e klas, by ich destruktory zosta³y wywo³ane w przypadku wyrzucenia jakiegoœ wyj¹tku.
+Jak to nale¿y uczyniæ? Kwestia nie jest trudna. Najlepiej jest zrobiæ tak, aby dla ka¿dego pojedynczego zasobu (jak zaalokawany blok pamiêci, otwarty plik, itp.) istnia³ jeden obiekt. W momencie zniszczenia tego obiektu (z powodu rzucenia wyj¹tku) zostanie wywo³any destruktor jego klasy, który zwolni zasób (czyli np. usunie pamiêæ albo zamknie plik).
+Destruktor wskaŸnika?…
+To bardzo proste, prawda? ;) Ale ¿eby by³o jeszcze ³atwiejsze, spójrzmy na prosty przyk³ad. Zajmiemy siê zasobem, który najbardziej znamy, czyli pamiêci¹ operacyjn¹; oto przyk³ad kodu, który mo¿e spowodowaæ jej wyciek:
+ 
+try
+{
+   CFoo* pFoo = new CFoo;
+ 
+   // ...
+ 
+         throw "Cos sie stalo";
+         // obiekt niezwolniony, mamy wyciek!
+}
+// (tutaj catch)
+ 
+Przyczyna jest oczywiœcie taka, i¿ odwijanie stosu nie usunie obiektu zaalokowanego dynamicznie na stercie. Usuniêty zostanie rzecz jasna sam wskaŸnik (czyli zmienna pFoo), ale na tym siê skoñczy. Kompilator nie zajmie siê obiektem, na który ów wskaŸnik pokazuje.
+ 
+Zapytasz: „A czemu nie? Przecie¿ móg³by to zrobiæ”. Pomyœl jednak, ¿e nie musi to byæ wcale jedyny wskaŸnik pokazuj¹cy na dynamiczny obiekt. W przypadku usuniêcia obiektu wszystkie pozosta³e sta³yby siê niewa¿ne. Oprócz tego by³oby to z³amanie zasady, i¿ obiekty stworzone jawnie (poprzez new) musz¹ byæ tak¿e jawnie zniszczone (przez delete).
+ 
+My jednak chcielibyœmy, aby wraz z koñcem ¿ycia wskaŸnika skoñczy³ siê tak¿e ¿ywot pamiêci, na któr¹ on pokazuje. Jak mo¿na to osi¹gn¹æ?
+Có¿, gdyby nasz wskaŸnik by³ obiektem jakiejœ klasy, wtedy moglibyœmy napisaæ instrukcjê delete w jej destruktorze. Tak jest jednak nie jest: wskaŸnik to typ wbudowany[2], wiêc nie mo¿emy napisaæ dlañ destruktora - podobnie jak nie mo¿emy tego zrobiæ dla typu int czy float.
+Sprytny wskaŸnik
+WskaŸnik musia³by wiêc byæ klas¹… Dlaczego nie? Podkreœla³em w zesz³ym rozdziale, ¿e klasy w C++ s¹ tak pomyœlane, aby mog³y one naœladowaæ typy podstawowe. Czemu zatem nie mo¿naby stworzyæ sobie takiej klasy, która dzia³aby jak wskaŸnik - typ wbudowany? Wtedy mielibyœmy pe³n¹ swobodê w okreœleniu jej destruktora, a tak¿e innych metod.
+ 
+Oczywiœcie, nie my pierwsi wpadliœmy na ten pomys³. To rozwi¹zanie jest szeroko znane i nosi nazwê sprytnych wskaŸników (ang. smart pointers). Takie wskaŸniki s¹ podobne do zwyk³ych, jednak przy okazji oddaj¹ jeszcze pewne dodatkowe przys³ugi. W naszym przypadku chodzi o dba³oœæ o zwolnienie pamiêci w przypadku wyst¹pienia wyj¹tku.
+Sprytny wskaŸnik jest klas¹. Ma ona jednak odpowiednio przeci¹¿one operatory - tak, ¿e korzystanie z jej obiektów niczym nie ró¿ni siê od korzystania z normalnych wskaŸników. Popatrzmy na znany z zesz³ego rozdzia³u przyk³ad:
+ 
+class CFooSmartPtr
+{
+   private:
+         // opakowywany, w³aœciwy wskaŸnik
+         CFoo* m_pWskaznik;
+ 
+   public:
+         // konstruktor i destruktor
+         CFooSmartPtr(CFoo* pFoo) : m_pWskaznik(pFoo)   { }
+         ~CFooSmartPtr()   { if (m_pWskaznik) delete m_pWskaznik; }
+ 
+         //-------------------------------------------------------------
+ 
+         // operator dereferencji
+         CFoo& operator*()       { return *m_pWskaznik; }
+ 
+         // operator wy³uskania
+         CFoo* operator->()      { return m_pWskaznik; }
+};
+ 
+Jest to inteligentny wskaŸnik na obiekty klasy CFoo; docelowy typ jest jednak nieistotny, bo równie dobrze mo¿naby pokazywaæ na liczby typu int czy te¿ inne obiekty. Wa¿na jest zasada dzia³ania - zupe³nie nieskomplikowana.
+Klasy CFooSmartPtr u¿ywamy po prostu zamiast typu CFoo*:
+ 
+try
+{
+   CFooSmartPtr pFoo = new CFoo;
+ 
+   // ...
+ 
+         throw "Cos sie stalo";
+         // niszczony obiekt pFoo i wywo³ywany destruktor CFooSmartPtr
+}
+// (tutaj catch)
+ 
+Dziêki przeci¹¿eniu operatorów korzystamy ze sprytnego wskaŸnika dok³adnie w ten sam sposób, jak ze zwyk³ego. Poza tym rozwi¹zujemy problem ze zwolnieniem pamiêci: zajmuje siê tym destruktor klasy CFooSmartPtr. Stosuje on operator delete wobec w³aœciwego, wewnêtrznego wskaŸnika (typu „normalnego”, czyli CFoo*), usuwaj¹c stworzony dynamicznie obiekt. Robi niezale¿nie od tego, gdzie i kiedy (i czy) wyst¹pi³ jakikolwiek wyj¹tek. Wystarczy, ¿e zostanie zlikwidowany obiekt pFoo, a to poci¹gnie za sob¹ zwolnienie pamiêci.
+ 
+I o to nam w³aœnie chodzi³o. Wykorzystaliœmy mechanizm odwijania stosu do zwolnienia zasobów, które normalnie by³yby pozostawione same sobie. Nasz problem zosta³ rozwi¹zany.
+Nieco uwag
+Aby jednak nie by³o a¿ tak bardzo piêknie, na koniec paragrafu muszê jeszcze trochê poglêdziæ :) Chodzi mianowicie o dwie wa¿ne sprawy zwi¹zane ze sprytnymi wskaŸnikami, których u¿ywamy w po³¹czeniu z mechanizmem wyj¹tków.
+Ró¿ne typy wskaŸników
+
+Zaprezentowana wy¿ej klasa CFooSmartPtr jest typem inteligentnego wskaŸnika, który mo¿e pokazywaæ na obiekty jakiejœ zdefiniowanej wczeœniej klasy CFoo. Przy jego pomocy nie mo¿emy odnosiæ siê do obiektów innych klas czy typów podstawowych.
+ 
+Jeœli jednak bêdzie to konieczne, wówczas musimy niestety napisaæ now¹ klasê wskaŸnika. Nie jest to trudne: wystarczy w definicji CFooSmartPtr zmieniæ wyst¹pienia CFoo np. na int. W nastêpnym rozdziale poznamy zreszt¹ o wiele bardziej efektywn¹ technikê (mianowicie szablony), która uwolni nas od tej ¿mudnej pracy.
+Za chwilê te¿ przyjrzymy siê rozwi¹zaniu, jakie przygotowali dla nas sami twórcy C++ w Bibliotece Standardowej.
+U¿ywajmy tylko tam, gdzie to konieczne
+
+Muszê te¿ powtórzyæ to, o czym ju¿ wspomnia³em przy pierwszym spotkaniu ze sprytnymi wskaŸnikami. Otó¿ trzeba pamiêtaæ, ¿e nie s¹ one uniwersalnym lekiem na wszystkie bol¹czki programisty. Nie nale¿y ich stosowaæ wszêdzie, poniewa¿ ka¿dy rodzaj inteligentnego wskaŸnika (my na razie poznaliœmy jeden) ma œciœle okreœlone zastosowania.
+W sytuacjach, w których z powodzeniem sprawdzaj¹ siê zwyk³e wskaŸniki, powinniœmy nadal z nich korzystaæ. Dopiero w takich przypadkach, gdy s¹ one niewystarczaj¹ce, musimy siêgn¹æ go bardziej wyrafinowane rozwi¹zania. Takim przypadkiem jest w³aœnie rzucanie wyj¹tków.
+Co ju¿ zrobiono za nas
+
+Metoda opakowywania zasobów mo¿e siê wydawaæ nazbyt praco- i czasoch³onna, a przede wszystkim wtórna. Stosuj¹c j¹ pewnie szybko zauwa¿y³byœ, ¿e napisane przez ciebie klasy powinny byæ obecne w niemal ka¿dym programie korzystaj¹cym z wyj¹tków.
+ 
+Naturalnie, mog¹ byæ one dobrym punktem wyjœcia dla twojej w³asnej biblioteki z przydatnymi kodami, u¿ywanymi w wielu aplikacjach. Niewykluczone, ¿e kiedyœ bêdziesz musia³ napisaæ przynajmniej kilka takich klas-opakowañ, je¿eli zechcesz skorzystaæ z zasobów innych ni¿ pamiêæ operacyjna czy pliki dyskowe.
+Na razie jednak lepiej chyba sprawdz¹ siê narzêdzia, które otrzymujesz wraz z jêzykiem C++ i jego Bibliotek¹ Standardow¹. Zobaczmy pokrótce, jak one dzia³aj¹; ich dok³adny opis znajdziesz w kolejnych rozdzia³ach, poœwiêconych samej tylko Bibliotece Standardowej.
+Klasa std::auto_ptr
+Sprytne wskaŸniki chroni¹ce przed wyciekami pamiêci, powstaj¹cymi przy rzucaniu wyj¹tków, s¹ doœæ czêsto u¿ywane w praktyce. Samodzielne ich definiowanie by³oby wiêc uci¹¿liwe. W C++ mamy wiêc ju¿ stworzon¹ do tego klasê std::auto_ptr.
+Œciœlej mówi¹c, auto_ptr jest szablonem klasy. Co to dok³adnie znaczy, dowiesz siê w nastêpnym rozdziale. Póki co bêdziesz wiedzia³, i¿ pozwala to na u¿ywanie auto_ptr w charakterze wskaŸnika do dowolnego typu danych. Nie musimy ju¿ zatem definiowiaæ ¿adnych klas.
+ 
+Aby skorzystaæ z auto_ptr, trzeba jedynie do³¹czyæ standardowy plik nag³ówkowy memory:
+ 
+#include <memory>
+ 
+Teraz mo¿emy ju¿ korzystaæ z tego narzêdzia. Z powodzeniem mo¿e ono zast¹piæ nasz¹ pieczo³owicie wypracowan¹ klasê CFooSmartPtr:
+ 
+try
+{
+   std::auto_ptr<CFoo> pFoo(new CFoo);
+ 
+   // ...
+ 
+         throw "Cos sie stalo";
+         // przy niszczeniu wskaŸnika auto_ptr zwalniana jest pamiêæ
+}
+// (tutaj catch)
+ 
+Konstrukcja std::auto_ptr<CFoo> pewnie wygl¹da nieco dziwnie, ale ³atwo siê do niej przyzwyczaisz, gdy ju¿ poznasz szablony. Mo¿na z niej tak¿e wydedukowaæ, ¿e w nawiasach k¹towych <> podajemy typ danych, na który chcemy pokazywaæ poprzez auto_ptr - tutaj jest to CFoo. £atwo domyœliæ siê, ¿e chc¹c mieæ wskaŸnik na typ int, piszemy std::auto_ptr<int>, itp.
+Zwróæmy jeszcze uwagê, w jaki sposob umieszcza siê instrukcjê new w deklaracji wskaŸnika. Z pewnych powodów, o których nie warto tu mówiæ, konstruktor klasy auto_ptr jest opatrzony s³ówkiem explicit. Dlatego te¿ nie mo¿na u¿yæ znaku =, lecz trzeba jawnie przekazaæ parametr, bêd¹cy normalnym wskaŸnikiem do zaalokowanego poprzez new obszaru pamiêci.
+W sumie wiêc sk³adnia deklaracji wskaŸnika auto_ptr wygl¹da tak:
+ 
+std::auto_ptr<typ> wskaŸnik(new typ[(parametry_konstruktora_typu)]);
+ 
+O zwolnienie pamiêci nie musimy siê martwiæ. Destruktor auto_ptr usunie j¹ zawsze; niezale¿nie od tego, czy wyj¹tek faktycznie wyst¹pi.
+Pliki w Bibliotece Standardowej
+Oprócz pamiêci drugim wa¿nym rodzajem zasobów s¹ pliki dyskowe. O dok³adnym sposobie ich obs³ugi powiemy sobie aczkolwiek dopiero wtedy, gdy zajmiemy siê strumieniami Biblioteki Standardowej.
+ 
+Tutaj chcê tylko wspomnieæ, ¿e metody dostêpu do plików, jakie s¹ tam oferowane, ca³kowicie poprawnie wspó³pracuj¹ z wyj¹tkami. Oto przyk³ad:
+ 
+#include <fstream>
+ 
+try
+{
+   // stworzenie strumienia i otwarcie pliku do zapisu
+   std::ofstream Plik("plik.txt", ios::out);
+ 
+   // zapisanie czegoœ do pliku
+   Plik << "Coœ";
+ 
+   // ...
+ 
+         throw "Cos sie stalo";
+         // strumieñ jest niszczony, a plik zamykany
+}
+// (tutaj catch)
+ 
+Plik reprezentowany przez strumieñ Plik zostanie zawsze zamkniêty. W ka¿dym przypadku - wyst¹pienia wyj¹tku lub nie - wywo³any bowiem bêdzie destruktor klasy ofstream, a on tym siê w³aœnie zajmie. Nie trzeba wiêc martwiæ siê o to.
+ 
+***
+ 
+Tak zakoñczymy omawianie procesu odwijania stosu i jego konsekwencji. Teraz zobaczysz, jak w praktyce powinno siê korzystaæ z mechanizmu wyj¹tków w C++.
+Wykorzystanie wyj¹tków
+
+Dwa poprzednie podrozdzia³y mówi³y o tym, czym s¹ wyj¹tki i jak dzia³a ten mechanizm w C++. W zasadzie na tym mo¿naby poprzestaæ, ale taki opis na pewno nie bêdzie wystarczaj¹cy. Jak ka¿dy element jêzyka, tak¿e i wyj¹tki nale¿y u¿ywaæ we w³aœciwy sposób; korzystaniu z wyj¹tków w praktyce zostanie wiêc poœwiêcony ten podrozdzia³.
+Wyj¹tki w praktyce
+
+Zanim z pieœni¹ na ustach zabierzemy siê do wykorzystywania wyj¹tków, musimy sobie odpowiedzieæ na jedno fundamentalne pytanie: czy tego potrzebujemy? Takie postawienie sprawy jest pewnie zaskakuj¹ce - dot¹d wszystkie poznawane przez nas elementy C++ by³y w³aœciwie niezbêdne do efektywnego stosowania tego jêzyka. Czy z wyj¹tkami jest inaczej? Przyjrzyjmy siê sprawie bli¿ej…
+ 
+Mo¿e powiedzmy sobie o dwóch podstawowych sytuacjach, kiedy wyj¹tków nie powinniœmy stosowaæ. W zasadzie mo¿na je zamkn¹æ w jedno stwierdzenie:
+ 
+Nie powinno siê wykorzystywaæ wyj¹tków tam, gdzie z powodzeniem wystarczaj¹ inne techniki sygnalizowania i obs³ugi b³êdów.
+ 
+Oznacza to, ¿e:
+O       nie powinniœmy „na si³ê” dodawaæ wyj¹tków do istniej¹cego programu. Je¿eli po przetestowaniu dzia³a on dobrze i efektywnie bez wyj¹tków, nie ma ¿adnego powodu, aby wprowadzaæ do kodu ten mechanizm
+O       dla tworzonych od nowa, lecz krótkich programów wyj¹tki mog¹ byæ zbyt potê¿nym narzêdziem. Wysi³ek w³o¿ony w jego zaprogramowanie (jak siê zaraz przekonamy - wcale niema³y) nie musi siê op³acaæ. Co oznacza pojêcie ‘krótki program’, to ju¿ ka¿dy musi sobie odpowiedzieæ sam; zwykle uwa¿a siê, ¿e krótkie s¹ te aplikacje, które nie przekraczaj¹ rozmiarami 1000-2000 linijek kodu
+ 
+Widaæ wiêc, ¿e nie ka¿dy program musi koniecznie stosowaæ ten mechanizm. S¹ oczywiœcie sytuacje, gdy obyæ siê bez niego jest bardzo trudno, jednak nadu¿ywanie wyj¹tków jest zazwyczaj gorsze ni¿ ich niedostatek. O obu sprawach (korzyœciach p³yn¹cych z wyj¹tków i ich przesadnemu stosowaniu) powiemy sobie jeszcze póŸniej.
+ 
+Za³ó¿my jednak, ¿e zdecydowaliœmy siê wykorzystywaæ wyj¹tki. Jak poprawnie zrealizowaæ te intencje? Jak wiêkszoœæ rzeczy w programowaniu, nie jest to trudne :) Musimy mianowicie:
+O       pomyœleæ, jakie sytuacje wyj¹tkowe mog¹ wyst¹piæ w naszej aplikacji i wyró¿niæ wœród nich poszczególne rodzaje, a nawet pewn¹ hierarchiê. To pozwoli na stworzenie odpowiednich klas dla obiektów wyj¹tków, czym zajmiemy siê w pierwszym paragrafie
+O       we w³aœciwy sposób zorganizowaæ obs³ugê wyj¹tków - chodzi g³ównie o rozmieszczenie bloków try i catch. Ta kwestia bêdzie przedmiotem drugiego paragrafu
+ 
+Potem mo¿emy ju¿ tylko mieæ nadziejê, ¿e nasza ciê¿ko wykonana praca… nigdy nie bêdzie potrzebna. Najlepiej przecie¿ by³oby, aby sytuacje wyj¹tkowe nie zdarza³y siê, a nasze programy dzia³a³y zawsze zgodnie z zamierzeniami… Có¿, praca programisty nie jest us³ana ró¿ami, wiêc tak nigdy nie bêdzie. Nauczmy siê wiêc poprawnie reagowaæ na wszelkiego typu nieprzewidziane zdarzenia, jakie mog¹ siê przytrafiæ naszym aplikacjom.
+Projektowanie klas wyj¹tków
+
+C++ umo¿liwia rzucenie w charakterze wyj¹tków obiektów dowolnych typów, tak¿e tych wbudowanych. Taka mo¿liwoœæ jest jednak ma³o poci¹gaj¹ca, jako ¿e pojedyncza liczba czy napis nie nios¹ zwykle wystarczaj¹cej wiedzy o powsta³ej sytuacji.
+Dlatego te¿ powszechn¹ praktyk¹ jest tworzenie w³asnych typów (klas) dla obiektów wyj¹tków. Takie klasy zawieraj¹ w sobie wiêcej informacji zebranych „z miejsca katastrofy”, które mog¹ byæ przydatne w rozpoznaniu i rozwi¹zaniu problemu.
+Definiujemy klasê
+Co wiêc powinien zawieraæ taki obiekt? Najwa¿niejsze jest ustalenie rodzaju b³êdu oraz miejsca jego wyst¹pienia w kodzie. Typowym zestawem danych dla wyj¹tku mo¿e byæ zatem:
+O       nazwa pliku z kodem i numer wiersza, w którym rzucono wyj¹tek. Do tego mo¿na dodaæ jeszcze datê kompilacji programu, aby rozró¿niæ jego poszczególne wersje
+O       dane identyfikacyjne b³êdu - w najprostszej wersji tekstowy komunikat
+ 
+Nasza klasa wyj¹tku mog³aby wiêc wygl¹daæ tak:
+ 
+#include <string>
+ 
+class CException
+{
+   private:
+         // dane wyj¹tku
+         std::string m_strNazwaPliku;
+         unsigned    m_uLinijka;
+         std::string m_strKomunikat;
+ 
+   public:
+         // konstruktor
+         CException(const std::string& strNazwaPliku,
+                    unsigned uLinijka,
+                    const std::string& strKomunikat)
+               : m_strNazwaPliku(strNazwaPliku),
+                 m_uLinijka(uLinijka),
+                 m_strKomunikat(strKomunikat)             { }
+ 
+         //-------------------------------------------------------------
+ 
+         // metody dostêpowe
+         std::string NazwaPliku() const      { return m_strNazwaPliku; }
+         unsigned    Linijka() const         { return m_uLinijka; }
+         std::string Komunikat() const       { return m_strKomunikat; }
+};
+ 
+Doœæ obszerny konstruktor pozwala na podanie wszystkich danych za jednym zamachem, w instrukcji throw:
+ 
+throw CException(__FILE__, __LINE__, "Cos sie stalo");
+ 
+Dla wygody mo¿na sobie nawet zdefiniowaæ odpowiednie makro, jako ¿e __FILE__ i __LINE__ pojawi¹ siê w ka¿dej instrukcji rzucenia wyj¹tku. Jest to szczególnie przydatne, je¿eli do wyj¹tku do³¹czymy jeszcze inne informacje pochodz¹ce predefiniowanych symboli preprocesora.
+ 
+Tak¿e konstruktor klasy mo¿e dokonywaæ zbierania jakichœ informacji od programu. Mog¹ to byæ np. zrzuty pamiêci (ang. memory dumps), czyli obrazy zawartoœci kluczowych miejsc pamiêci operacyjnej. Takie zaawansowane techniki s¹ aczkolwiek przydatne tylko w naprawdê du¿ych programach.
+ 
+Po z³apaniu takiego obiektu mo¿emy pokazaæ zwi¹zane z nim dane - na przyk³ad tak:
+ 
+catch (CException& Wyjatek)
+{
+   std::cout << "     Wystapil wyjatek      " << std::endl;
+   std::cout << "---------------------------" << std::endl;
+ 
+   std::cout << "Komunikat:\t"  << Wyjatek.Komunikat() << std::endl;
+   std::cout << "Plik:\t"       << Wyjatek.NazwaPliku() << std::endl;
+   std::cout << "Wiersz kodu:\t" << Wyjatek.Linijka() << std::endl;
+}
+ 
+Jest to ju¿ ca³kiem zadowalaj¹ca informacja o b³êdzie.
+Hierarchia wyj¹tków
+Pojedyncza klasa wyj¹tku rzadko jest jednak wystarczaj¹ca. Wad¹ takiego skromnego rozwi¹zania jest to, ¿e ze wzglêdu na charakter danych o sytuacji wyj¹tkowej, jakie zawiera obiekt, ograniczamy sobie mo¿liwoœæ obs³ugi wyj¹tku. W naszym przypadku trudno jest podj¹æ jakiekolwiek dzia³ania poza wyœwietleniem komunikatu i zamkniêciem programu.
+ 
+Dla zwiêkszenia pola manewru mo¿naby dodaæ do klasy jakieœ pola typu wyliczeniowego, okreœlaj¹ce bli¿ej rodzaj b³êdu; wówczas w bloku catch pojawi³aby siê pewnie jakaœ instrukcja switch.
+Jest aczkolwiek praktyczniejsze i bardziej elastyczne wyjœcie: mo¿emy u¿yæ dziedziczenia.
+ 
+Okazuje siê, ¿e rozs¹dne jest stworzenie hierarchii sytuacji wyj¹tków i odpowiadaj¹cej jej hierarchii klas wyj¹tków. Opiera siê to na spostrze¿eniu, ¿e mo¿liwe b³êdy mo¿emy najczêœciej w pewien sposób sklasyfikowaæ. Przyk³adowo, mo¿naby wyró¿niæ wyj¹tki zwi¹zane z pamiêci¹, z plikami dyskowymi i obliczeniami matematycznymi: wœród tych pierwszych mielibyœmy np. brak pamiêci (ang. out of memory) i b³¹d ochrony (ang. access violation); dostêp do pliku mo¿e byæ niemo¿liwy chocia¿by z powodu jego braku albo nieobecnoœci dysku w napêdzie; dzia³ania na liczbach mog¹ wreszcie doprowadziæ do dzielenia przez zero lub wyci¹gania pierwiastka z liczby ujemnej.
+Taki uk³ad, oprócz mo¿liwoœci rozróŸnienia poszczególnych typów wyj¹tków, ma jeszcze jedn¹ zaletê. Mo¿na bowiem dla ka¿dego typu zakodowaæ specyficzny dla niego sposób obs³ugi, stosuj¹c do tego metody wirtualne - np. w ten sposób:
+ 
+// klasa bazowa
+class IException
+{
+   public:
+         // wyœwietl informacje o wyj¹tku
+         virtual void Wyswietl();
+};
+ 
+//----------------------------------------------------------------------
+ 
+// wyj¹tek zwi¹zany z pamiêci¹
+class CMemoryException : public IException
+{
+   public:
+         // dzia³ania specyficzne dla tego rodzaju wyj¹tku
+         virtual void Wyswietl();
+};
+ 
+// wyj¹tek zwi¹zany z plikami
+class CFilesException : public IException
+{
+   public:
+         // dzia³ania specyficzne dla tego rodzaju wyj¹tku
+         virtual void Wyswietl();
+};
+ 
+Pamiêtajmy jednak, ¿e nadmierne rozbudowywanie hierarchii te¿ nie ma zbytniego sensu. Nie wydaje siê na przyk³ad s³uszne wyró¿nianie osobnych klas dla wyj¹tków dzielenia przez zero, pierwiastka kwadratowego z liczy ujemnej oraz podniesienia zera do potêgi zerowej. Jest bowiem wielce prawdopodobne, ¿e jedyna ró¿nica miêdzy tymi sytuacjami bêdzie polega³a na treœci wyœwietlanego komunikatu. W takich przypadkach zdecydowanie wystarczy pojedyncza klasa.
+Organizacja obs³ugi wyj¹tków
+
+Zdefiniowana uprzednio klasê lub jej hierarchiê bêdziemy pewnie mieli okazjê nieraz wykorzystaæ. Poniewa¿ nie jest to takie oczywiste, warto poœwiêciæ temu zagadnieniu osobny paragraf.
+Umiejscowienie bloków try i catch
+Wydawa³oby siê, ¿e obs³uga wyj¹tków to bardzo prosta czynnoœæ - szczególnie, jeœli mamy ju¿ zdefiniowany dla nich odpowiednie klasy. Niestety, polega to na czymœ wiêcej ni¿ tylko napisaniu „niepewnego” kodu w bloku try i instrukcji obs³ugi b³êdów catch.
+Kod warstwowy
+
+Jednym z podstawowych powodów, dla których wprowadzono wyj¹tki w C++, by³a koniecznoœæ zapewnienia jakiegoœ sensownego sposobu reakcji na b³êdy w programach o skomplikowanym kodzie. Ka¿dy wiêkszy (i dobrze napisany) program ma bowiem sk³onnoœæ do „rozwarstwiania” kodu.
+Nie jest to bynajmniej niepo¿¹dane zjawisko, wrêcz przeciwnie. Polega ono na tym, ¿e w aplikacji mo¿emy wyró¿niæ fragmenty wy¿szego i ni¿szczego poziomu. Te pierwsze odpowiadaj¹ za ca³¹ logikê aplikacji, w tym za jej komunikacjê z u¿ytkownikiem; te drugie wykonuj¹ bardziej wewnêtrzne czynnoœci, takie jak na przyk³ad zarz¹dzanie pamiêci¹ operacyjn¹ czy dostêp do plików na dysku.
+ 
+Taki podzia³ jest korzystny, poniewa¿ u³atwia konserwacjê programu, a tak¿e wykorzystywanie pewnych fragmentów kodu (zw³aszcza tych niskopoziomowych) w kolejnych projektach. Funkcje odpowiedzialne za pewne proste czynnoœci, jak wspomniany dostêp do plików nie musz¹ nic wiedzieæ o tym, kto je wywo³uje - w³aœciwie to nawet nie powinny. Innymi s³owy:
+ 
+Kod ni¿szego poziomu powinien byæ zazwyczaj niezale¿ny od kodu wy¿szego poziomu.
+ 
+Tylko wtedy zachowujemy wymienione wy¿ej zalety „warstwowoœci” programu.
+Podawanie b³êdów wy¿ej
+
+Podzia³ warstwowy wymusza poza tym doœæ œciœle ustalony przep³yw danych w aplikacji. Odbywa siê on zawsze tak, ¿e kod wy¿szego poziomu przekazuje do ni¿szych warstw konieczne informacje (np. nazwê pliku, który ma byæ otwarty) i odbiera rezultaty wykonanych operacji (czyli zawartoœæ pliku). Potem wykorzystuje je do swych w³asnych zadañ (np. do wyœwietlenia pliku na ekranie).
+Ten naturalny uk³ad dzia³a dobrze… dopóki siê nie zepsuje :) Przyczyn¹ mog¹ byæ sytuacje wyj¹tkowe wystêpuj¹ce w kodzie ni¿szego poziomu. Typowym przyk³adem mo¿e byæ brak ¿¹danego pliku, wobec czego jego otwarcie nie jest mo¿liwe. Funkcja, która mia³a tego dokonaæ, nie bêdzie potrafi³a poradziæ sobie z tym b³êdem, poniewa¿ nazwa pliku do otwarcie pochodzi³a z zewn¹trz - „z góry”. Mo¿e jedynie poinformowaŸ wywo³uj¹cego o zainstnia³ej sytuacji.
+ 
+I tutaj wkraczaj¹ na scenê opisane na samym pocz¹tku rozdzia³u mechanizmy obs³ugi b³êdów. Jednym z nich s¹ w³aœnie wyj¹tki.
+Dobre wypoœrodkowanie
+
+Ich stosowanie jest szczególnie wskazane w³aœnie wtedy, gdy nasz kod ma kilka logicznych warstw, co zreszt¹ powinno zdarzaæ siê jak najczêœciej. Wówczas odnosimy jedn¹ zasadnicz¹ korzyœæ: nie musimy martwiæ siê o sposób, w jaki informacja o b³êdzie dotrze z „pok³adów g³êbinowych” programu, gdzie wyst¹pi³a, na „górne piêtra”, gdzie mog³aby zostaæ w³aœciwie obs³u¿ona.
+ 
+Naszym problemem jest jednak co innego. O ile zazwyczaj dok³adnie wiadomo, gdzie wyj¹tek nale¿y rzuciæ (wiadomo - tam gdzie coœ siê nie powiod³o), o tyle trudnoœæ mo¿e sprawiæ wybranie w³aœciwego miejsca na jego z³apanie:
+O       je¿eli bêdzie on „za nisko”, wtedy najprawdopodobniej nie bêdzie mo¿liwe podjêcie ¿adnych rozs¹dnych dzia³añ w reakcji na wyj¹tek. Przyk³adowo, wymieniona funkcja otwieraj¹ca plik nie powinna sama ³apaæ wyj¹tku, który rzuci, bo bêdzie wobec niego bezradna. Skoro przecie¿ rzuci³a ten wyj¹tek, jest to w³aœnie znak, i¿ nie radzi sobie z powsta³a sytuacj¹ i oddaje inicjatywê komuœ bardziej kompetentnemu
+O       z drugiej strony, umieszczenie bloków catch „za wysoko” powoduje zbyt du¿e zamieszanie w funkcjonowaniu programu. Powoduje to, ¿e punkt wykonania przeskakuje o ca³e kilometry, niespodziewanie przerywaj¹c wszystko znajduj¹ce siê po drodze zdania. Nie nale¿y bowiem zapominaæ, ¿e po rzuceniu wyj¹tku nie ma ju¿ powrotu - dalsze wykonywanie zostanie co najwy¿ej podjête po wykonaniu bloku catch, który ten wyj¹tek. Ca³kowitym absurdem jest wiêc np. ujêcie ca³ej zawartoœci funkcji main() w blok try i obs³uga wszystkich wyj¹tków w nastêpuj¹cym dalej bloku catch. Nietrudno przecie¿ domyœliæ siê, ¿e takie rozwi¹zanie spowoduje zakoñczenie programu po ka¿dym wyst¹pieniu wyj¹tku
+ 
+Pytanie brzmi wiêc: jak osi¹gn¹æ rozs¹dny kompromis? Trzeba pogodziæ ze sob¹ dwie racje:
+O       koniecznoœæ sensownej obs³ugi wyj¹tku
+O       koniecznoœæ przywrócenia programu do normalnego stanu
+ 
+Nale¿y wiêc ³apaæ wyj¹tek w takim miejscu, w którym ju¿ mo¿liwe jest jego obs³u¿enie, ale jednoczeœnie po jego zakoñczeniu program powinien nadal móc podjaæ podj¹æ w miarê normaln¹ pracê.
+ 
+Przyk³ad?… Je¿eli u¿ytkownik wybierze opcjê otwarcia pliku, ale potem poda nieistniej¹c¹ nazwê, program powinien po prostu poinformowaæ o tym i ponownie zapytaæ o nazwê pliku. Nie mo¿e natomiast zmuszaæ u¿ytkownika do ponownego wybrania opcji otwarcia pliku. A ju¿ na pewno nie mo¿e niespodziewanie koñczyæ swojej pracy - to by³oby wrêcz skandaliczne.
+Chwytanie wyj¹tków w blokach catch
+Poprawne chwytanie wyj¹tków w blokach catch to kolejne (ostatnie ju¿ na szczêœcie) zagadnienie, o którym musimy pamiêtaæ. Wiesz na ten temat ju¿ ca³kiem sporo, ale nigdy nie zaszkodzi powtórzyæ sobie przyswojone wiadomoœci i przyswoiæ nowe.
+Szczegó³y przodem - druga ods³ona
+
+Swego czasu zwróci³em ci uwagê na wa¿n¹ sprawê kolejnoœci bloków catch. Uœwiadomi³em, ¿e ich dzia³anie tylko z pozoru przypomina przeci¹¿one funkcje, jako ¿e porz¹dek dopasowywania obiektu wyj¹tku œciœle pokrywa siê z porz¹dkiem samych bloków catch, a same dopasowywanie koñczy przy pierwszym sukcesie.
+ 
+W zwi¹zku nale¿y tak ustawiaæ bloki catch, aby na pocz¹tek sz³y te, które precyzyjniej opisuj¹ typ wyj¹tku. Gdy zdefiniujemy sobie hierarchiê klas wyj¹tków, ta zasada zyskuje jeszcze pewniejsz¹ podstawê. W przypadku typów podstawowych (int, double…) mo¿e byæ doœæ trudne wyobra¿enie siê relacji „typ ogólny - typ szczegó³owy”. Natomiast dla klas jest to oczywiste: wchodzi tu bowiem w grê jednoznaczny zwi¹zek dziedziczenia.
+Jakie s¹ wiêc konkretne wnioski? Ano takie, ¿e:
+ 
+Gdy stosujemy hierarchiê klas wyj¹tków, powinniœmy najpierw próbowaæ ³apaæ obiekty klas pochodnych, a dopiero potem obiekty klas bazowych.
+ 
+Mam nadziejê, i¿ wiesz doskonale, z jakiej fundamentalnej regu³y programowania obiektowego wynika powy¿sza zasada[3].
+Je¿eli zastosujemy klasy wyj¹tków z poprzedniego paragrafu, to ilustracj¹ mo¿e byæ taki kawa³ek kodu:
+ 
+try
+{
+   // ...
+}
+catch (CMemoryException& Wyjatek)
+{
+   // ...
+}
+catch (CFilesException& Wyjatek)
+{
+   // ...
+}
+catch (IException& Wyjatek)
+{
+   // ...
+}
+ 
+Instrukcje chwytaj¹ce bardziej wyspecjalizowane wyj¹tki - CMemoryException i CFilesException - umieszczamy na samej górze. Dopiero ni¿ej zajmujemy siê pozosta³ymi wyj¹tkami, chwytaj¹c obiekty typu bazowego IException. Gdybyœmy czynili to na pocz¹tku, z³apalibyœmy absolutnie wszystkie swoje wyj¹tki - nie daj¹c sobie szansy na rozró¿nienie b³êdów pamiêci od wyj¹tków plikowych lub innych.
+Widaæ wiêc po raz kolejny, ¿e w³aœciwe uporz¹dkowanie bloków catch ma niebagatelne znaczenie.
+Lepiej referencj¹
+
+We wszystkich przytoczonych ostatnio kodach ³apa³em wyjatki poprzez referencje do nich, a nie poprzez same obiekty. Zbywaliœmy to dot¹d milczeniem, ale czas ten fakt wyjaœniæ.
+ 
+Przyczyna jest w³aœciwie ca³kiem prosta. Referencje s¹, jak pamiêtamy, zakamuflowanymi wskaŸnikami: faktycznie ró¿ni¹ siê od wskaŸników tylko drobnymi szczegó³ami, jak choæby sk³adni¹. Zachowuj¹ jednak ich jedn¹ cenn¹ w³aœciwoœæ obiektow¹: pozwalaj¹ na stosowanie polimorfizmu metod wirtualnych.
+To doskonalne znane nam zjawisko jest wiêc mo¿liwe do wykorzystania tak¿e przy obs³udze wyj¹tków. Oto przyk³ad:
+ 
+try
+{
+   // ...
+}
+catch (IException& Wyjatek)
+{
+   // wywo³anie metody wirtualnej, póŸno wi¹zanej
+   Wyjatek.Wyswietl();
+}
+ 
+Metoda wirtualna Wyswietl() jest tu póŸno wi¹zana, zatem to, który jej wariant - z klasy podstawowej czy pochodnej - zostanie wywo³any, decyduje siê podczas dzia³ania programu. Jest to wiêc inny sposób na swoiste rozró¿nienie typu wyj¹tku i podjêcie dzia³añ celem jego obs³ugi.
+Uwagi ogólne
+
+Na sam koniec podzielê siê jeszcze garœci¹ uwag ogólnych dotycz¹cych wyj¹tków. Przede wszystkim zastanowimy siê nad korzyœciami z u¿ywania tego mechanizmu oraz sytuacjami, gdzie czêsto jest on nadu¿ywany.
+Korzyœci ze stosowania wyj¹tków
+
+Podstawowe zalety wyj¹tków przedstawi³em na pocz¹tku rozdzia³u, gdy porównywa³em je z innymi sposobami obs³ugi b³êdów. Teraz jednak masz ju¿ za sob¹ dog³êbne poznanie tej techniki, wiêc pewnie zw¹tpi³eœ w te przymioty ;) Nawet jeœli nie, to pokazane ni¿ej argumenty przemawiaj¹ce na korzyœæ wyj¹tków mog¹ pomóc ci w decyzji co do ich wykorzystania w konkretnej sytuacji.
+Informacja o b³êdzie w ka¿dej sytuacji
+Pierwsz¹ przewag¹, jak¹ wyj¹tki maj¹ nad innymi sposobami sygnalizowania b³êdów, jest uniwersalnoœæ: mo¿emy je bowiem stosowaæ w ka¿dej sytuacji i w ka¿dej funkcji.
+ 
+No ale czy to coœ nadzwyczajnego? Przecie¿ wydawa³oby siê, ¿e zarówno technika zwracania kodu b³êdu jak i wywo³anie zwrotne, mo¿e byæ zastosowane wszêdzie. To jednak nieprawda; oba te sposoby wymagaj¹ odpowiedniej deklaracji funkcji, uwzglêdniaj¹cej ich wykorzystanie. A nag³ówek funkcji mo¿e byæ czêsto ograniczony przez sam jêzyk albo inne czynniki - jest tak na przyk³ad w:
+O       konstruktorach
+O       wiêkszoœci przeci¹¿onych operatorów
+O       funkcjach zwrotnych dla zewnêtrznych bibliotek
+ 
+Do tej grupy mo¿naby zaliczyæ te¿ destruktory, ale jak przecie¿, z destruktorów nie mo¿na rzucaæ wyj¹tków.
+ 
+Dziêki temu, ¿e wyj¹tki nie opieraj¹ siê na normalnym sposobie wywo³ywania i powrotu z funkcji, mog¹ byæ u¿ywane tak¿e i w tych specjalnych funkcjach.
+Uproszczenie kodu
+Jakkolwiek dziwnie to zabrzmi, wyj¹tki umo¿liwiaj¹ te¿ znaczne uproszczenie kodu i uczynienie go przejrzystszym. Jest tak, gdy¿ pozwalaj¹ one przenieœæ sekwencje odpowiedzialne za obs³ugê b³êdów do osobnych bloków, z dala od w³aœciwych instrukcji.
+ 
+W normalnym kodzie procedury wygl¹daj¹ mniej wiêcej tak:
+O       zrób coœ
+O       sprawdŸ, czy siê uda³o
+O       zrób coœ innego
+O       sprawdŸ, czy siê uda³o
+O       zrób jeszcze coœ
+O       sprawdŸ, czy nie by³o b³êdów
+O       itd.
+ 
+Wyró¿nione tu sprawdzenia b³êdów s¹ realizowane zwykle przy pomocy instrukcji if lub switch. Przy ich u¿yciu kod staje siê wiêc pl¹tanin¹ instrukcji warunkowych, raczej trudnych do czytania.
+Gdy zaœ u¿ywamy wyj¹tków, to obs³uga b³êdów przenosi siê na koniec algorytmu:
+O       zrób coœ
+O       zrób coœ innego
+O       zrób jeszcze coœ
+O       itd.
+O       obs³u¿ ewentualne niepowodzenia
+ 
+Oczywiœcie dla tych, którzy nie dbaj¹ o porz¹dek w kodzie, jest to ¿aden argument, ale ty siê chyba do nich nie zaliczasz?
+Wzrost niezawodnoœci kodu
+Wreszcie mo¿na wytoczyæ najciê¿sze dzia³a. Wyj¹tki nie pozwalaj¹ na obojêtnoœæ - na ignorowanie b³êdów.
+ 
+Poprzedni akapit uœwiadamia, ¿e tradycyjne metody w rodzaju zwracania rezultatu musz¹ byæ aktywnie wspomagane przez programistê, który u¿ywa wykorzystuj¹cych je funkcji. Nie musi jednak tego robiæ; kod skompiluje siê tak samo poprawnie, je¿eli wartoœci zwracane zostan¹ ca³kowicie pominiête. Co wiêcej, mo¿e to prowadziæ do pominiêcia krytycznych b³êdów, które wprawdzie nie daj¹ natychmiast katastrofalnych rezultatów, ale potrafi¹ „przyczaiæ siê” w zakamarkach aplikacji, by ujawniæ siê w najmniej spodziewanym momencie.
+Mechanizm wyj¹tków jest skonstruowany zupe³nie przeciwnie. Tutaj nie trzeba siê wysilaæ, aby b³¹d da³ znaæ o sobie, bowiem wyj¹tek zawsze wywo³a jak¹œ reakcjê - choæby nawet awaryjne zakoñczenie programu. Natomiast œwiadome zignorowanie wyj¹tku wymaga z kolei pewnego wysi³ku.
+ 
+Tak wiêc tutaj mamy do czynienia z sytuacj¹, w której to nie programista szuka b³edu, lecz b³¹d szuka programisty. Jest to naturalnie znacznie lepsza sytuacja z punktu widzenia niezawodnoœci programu, bo pozwala na ³atwiejsze odszukanie wystêpuj¹cych weñ b³êdów.
+Nadu¿ywanie wyj¹tków
+
+Czytaj¹c o zaletach wyj¹tków, nie mo¿na wpaœæ w bezkrytyczny zachwyt nad nimi. One nie s¹ ani obowi¹zkow¹ technik¹ programistyczn¹, ani te¿ nie s¹ lekarstwem na b³êdy w programach, ani nawet nie s¹ pasuj¹cym absolutnie wszêdzie rozwi¹zaniem. Wyj¹tków ³atwo mo¿na nadu¿yæ i dlatego chcê siê przed tym przestrzec.
+Nie u¿ywajmy ich tam, gdzie wystarcz¹ inne konstrukcje
+Pocz¹tkuj¹cy programiœci maj¹ czasem sk³onnoœæ do uwa¿ania, i¿ ka¿de niepowodzenie wykonania jakiegoœ zadania zas³uguje na rzucenie wyj¹tku. Oto (z³y) przyk³ad:
+ 
+// funkcja wyszukuje liczbê w tablicy
+unsigned Szukaj(const CIntArray& aTablica, int nLiczba)
+{
+   // pêtla porównuje kolejne elementy tablicy z szukan¹ liczb¹
+   for (unsigned i = 0; i < aTablica.Rozmiar{]; ++i)
+         if (aTablica[i] == nLiczba)
+               return i;
+ 
+   // w razie niepowodzenia - wyj¹tek?...
+   throw CError(__FILE__, __LINE__, "Nie znaleziono liczby");
+}
+ 
+Rzucanie wyj¹tku w razie nieznalezienia elementu tablicy to gruba przesada. Pomyœlmy tylko, ¿e kod wykorzystuj¹cy tê funkcjê musia³by wygl¹daæ mniej wiêcej tak:
+ 
+// szukamy liczby nZmienna w tablicy aTablicaLiczb
+ 
+try
+{
+   unsigned uIndeks = Szukaj(aTablicaLiczb, nZmienna);
+ 
+   // zrób coœ ze znalezion¹ liczb¹...
+}
+catch (CError& Wyjatek)
+{
+   std::cout << Wyjatek.Komunikat() << std::endl;
+}
+ 
+Mo¿e i ma on swój urok, ale chyba lepiej skorzystaæ z mniej urokliwej, ale na pewno prostszej instrukcji if, porównuj¹cej po prostu rezultat funkcji Szukaj() z jak¹œ ustalon¹ sta³¹ (np. -1), oznaczaj¹c¹ niepowodzenie szukania. Pozwoli to na wydorêbnienie sytuacji faktycznie wyj¹tkowych od tych, które zdarzaj¹ siê w normalnym toku dzia³ania programu. Nieobecnoœæ liczby w tablicy nale¿y zwykle do tej drugiej grupy i nie jest wcale krytyczna dla funkcjonowania aplikacji - ergo: nie wymaga zastosowania wyj¹tków.
+Nie u¿ywajmy wyj¹tków na si³ê
+Nareszcie, muszê powstrzymaæ wszystkich tych, którzy z zapa³em rzucili siê do implementacji wyj¹tków w swych gotowych i dzia³aj¹cych programach. Nies³usznie! Prawdopodobnie bêdzie to kawa³ ciê¿kiej, nikomu niepotrzebnej roboty. Nie ma sensu jej wykonywaæ, poniewa¿ zysk zwykle bêdzie nieadekwatny do w³o¿onego wysi³ku.
+ 
+Co najwy¿ej mo¿na pokusiæ siê o zastosowanie wyj¹tków w przypadku, gdy nowa wersja danego programu wymaga napisania jego kodu od nowa. Decyzja o tym, czy tak ma siê staæ w istocie, powinna byæ podjêta jak najwczeœniej.
+ 
+***
+ 
+Praktyczne wykorzystanie wyj¹tków to sztuka, jak zreszt¹ ca³e programowanie. Najlepszym nauczycielem bêdzie tu doœwiadczenie, ale jeœli zawartoœæ tego podrozdzia³u pomo¿e ci choæ trochê, to jego cel bêdê móg³ uwa¿aæ za osi¹gniêty.
+Podsumowanie
+
+Ten rozdzia³ omawia³ mechanizm wyj¹tków w jêzyku C++. Rozpocz¹³ siê od przedstawienia kilku popularnych sposobów radzenia sobie z b³êdami, jakie moga wystapiæ w trakcie dzia³ania programu. PóŸniej pozna³eœ same wyj¹tki oraz podstawowe informacje o nich. Dalej zajêliœmy siê zagadnieniem odwijania stosu i jego konsekwencji, by wreszcie nauczyæ siê wykorzystywaæ wyj¹tki w praktyce.
+Pytania i zadania
+
+Rozdzia³ koñczymy tradycyjn¹ porcj¹ pytañ i æwiczeñ.
+Pytania
+
+1.      Kiedy mo¿emy mówiæ, i¿ mamy do czynienia z sytuacj¹ wyj¹tkow¹?
+2.      Dlaczego specjalny rezultat funkcji nie zawsze jest dobr¹ metod¹ informowania o b³êdzie?
+3.      Czy ró¿ni siê throw od return?
+4.      Dlaczego kolejnoœæ bloków catch jest wa¿na?
+5.      Jaka jest rola bloku catch(...)?
+6.      Czym jest specyfikacja wyj¹tków? Co dzieje siê, je¿eli zostanie ona naruszona?
+7.      Które obiekty s¹ niszczone podczas odwijania stosu?
+8.      W jakich funkcjach nie nale¿y rzucaæ wyj¹tków?
+9.      W jaki sposób mo¿emy zapewniæ zwolnienie zasobów w przypadku wyst¹pienia wyj¹tku?
+10.  Dlaczego warto definiowaæ w³asne klasy dla obiektów wyj¹tków?
+Æwiczenia
+
+1.      Zastanów siê, jakie informacje powinien zawieraæ dobry obiekt wyj¹tku. Które z tych danych dostarcza nam sam kompilator, a które trzeba zapewniæ sobie samemu?
+2.      (Trudne) Mechanizm wyj¹tków zosta³ pomyœlany do obs³ugi b³êdów w trakcie dzia³ania programu. To jednak nie s¹ jego jedyne mo¿liwe zastosowanie; pomyœl, do czego potencjalnie przydatne mog¹ byæ jeszcze wyj¹tki - a szczególnie towarzysz¹cy im proces odwijania stosu…
+
+[1] Wykorzystanie szablonów zlikwidowa³oby obie te niedogodnoœci, ale czy naprawdê s¹ one tego warte…?
+[2] WskaŸnik mo¿e wprawdzie pokazywaæ na typ zdefiniowany przez u¿ytkownika, ale sam zawsze bêdzie typem wbudowanym. Jest to przecie¿ zwyk³a liczba - adres w pamiêci.
+[3] Oczywiœcie wynika ona st¹d, ¿e obiekt klasy pochodnej jest jednoczeœnie obiektem klasy bazowej. Albo te¿ st¹d, ¿e zawsze istnieje niejawna konwersja z klasy pochodnej na klasy bazowej - jakkolwiek to wyrazimy, bêdzie poprawnie.
