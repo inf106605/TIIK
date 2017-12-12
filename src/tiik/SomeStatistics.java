@@ -43,11 +43,12 @@ public class SomeStatistics {
 		inputSize = 0;
                 while (true)
 		{
-			final int b = inputStream.read();
-			if (b == -1)
+			final int input = inputStream.read();
+			if (input == -1)
 				break;
+			final byte b = (byte) input;
 			final long count = counts.containsKey(b) ? counts.get(b) + 1 : 1;
-			counts.put((byte) b, count);
+			counts.put(b, count);
 			++inputSize;
 		}
 	}
