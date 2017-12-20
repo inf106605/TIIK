@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import tiik.lz78.LZ78;
 
 /**
  *
@@ -33,7 +34,8 @@ public class Main {
 		if (args.length == 1) {
 			final File file = new File(args[0]);
 			try (final FileInputStream inputStream = new FileInputStream(file)) {
-				testStatistics(inputStream);
+				//testStatistics(inputStream);
+				testCompression(inputStream);
 			} catch (FileNotFoundException e) {
 				System.err.println("No such file!");
 				return;
@@ -42,7 +44,8 @@ public class Main {
 				return;
 			}
 		} else {
-			testStatistics(System.in);
+			//testStatistics(System.in);
+			testCompression(System.in);
 		}
 	}
 	
@@ -93,5 +96,15 @@ public class Main {
 
 		System.out.println("Binary entropy: " + ss.getBinaryEntropy());
 	}
-			
+	
+	private static void testCompression(final InputStream inputStream) {
+		LZ78 lz78 = new LZ78();
+		try {
+			lz78.compress(inputStream, System.out);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
+	
 }
