@@ -8,7 +8,6 @@ import java.io.OutputStream;
 public class LZ78 {
 	
 	private boolean firstCall = true;
-	private final int indexBytes = 4;
 	private final Dictionary dictionary = new Dictionary();
 	private int plainSize = 0;
 	private int compressedSize = 0;
@@ -23,6 +22,7 @@ public class LZ78 {
 		int length = 0;
 		int offset = 0;
 		while (true) {
+			final int indexBytes = getIndexBytes();
 			final int minBytes = dictionary.getMaxLength() + 1;
 			if (minBytes > bytes.length) {
 				byte[] newBytes = new byte[bytes.length * 2];
@@ -45,9 +45,9 @@ public class LZ78 {
 			}
 			
 			final Dictionary.Entry entry = dictionary.find(bytes, offset, length - 1);
-			outputStream.write(toBytes(entry.index));
+			outputStream.write(toBytes(entry.index, indexBytes));
 			outputStream.write(bytes, offset + entry.length, 1);
-			compressedSize += 5;
+			compressedSize += indexBytes + 1;
 			
 			dictionary.add(bytes, offset, entry.length + 1);
 			
@@ -60,9 +60,11 @@ public class LZ78 {
 		//outputStream.write(new byte[]{4});
 	}
 	
-	private byte[] toBytes(final int x) {
-		int shift = (indexBytes - 1) * 8;
-		final byte[] bytes = new byte[indexBytes];
+	private static byte[] toBytes(final int x, final int bytesNumber) {
+		if (bytesNumber == 0)
+			return new byte[0];
+		int shift = (bytesNumber - 1) * 8;
+		final byte[] bytes = new byte[bytesNumber];
 		for (int mask = 0xFF << shift, i = 0; mask != 0; mask >>>= 8, ++i, shift -= 8)
 			bytes[i] = (byte) ((x & mask) >>> shift);
 		return bytes;
@@ -73,15 +75,16 @@ public class LZ78 {
 			firstCall = false;
 			readCompressionParameters(inputStream);
 		}
-		final byte[] bytes = new byte[indexBytes + 1];
+		final byte[] bytes = new byte[getMaxIndexBytes() + 1];
 		while (true) {
-			final int readed = inputStream.read(bytes, 0, bytes.length);
+			final int indexBytes = getIndexBytes();
+			final int readed = inputStream.read(bytes, 0, indexBytes + 1);
 			if (readed == -1)
 				break;
-			else if (readed != bytes.length)
+			else if (readed != indexBytes + 1)
 				throw new LZ78UnexpectedEndException(compressedSize, plainSize, readed, bytes.length);
 			
-			final int index = toInt(bytes);
+			final int index = toInt(bytes, indexBytes);
 			byte[] entry;
 			if (index != 0) {
 				if (index > dictionary.getSize())
@@ -108,13 +111,36 @@ public class LZ78 {
 		//
 	}
 	
-	private int toInt(final byte[] bytes) {
+	private static int toInt(final byte[] bytes, final int bytesNumber) {
 		int result = 0;
-		for (int i = 0; i != indexBytes; ++i) {
+		for (int i = 0; i != bytesNumber; ++i) {
 			result <<= 8;
 			result |= Byte.toUnsignedInt(bytes[i]);
 		}
 		return result;
+	}
+	
+	private int getIndexBytes() {
+		final int dictionarySize = dictionary.getSize();
+		if (dictionarySize < (1 << 16)) {
+			if (dictionarySize < (1 << 8)) {
+				if (dictionarySize == 0)
+					return 0;
+				else
+					return 1;
+			} else {
+				return 2;
+			}
+		} else {
+			if (dictionarySize < (1 << 24))
+				return 3;
+			else
+				return 4;
+		}
+	}
+	
+	private int getMaxIndexBytes() {
+		return 4;
 	}
 	
 	@Override
