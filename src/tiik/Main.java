@@ -5,12 +5,15 @@
  */
 package tiik;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.IllegalFormatCodePointException;
 import java.util.Collections;
 import java.util.Comparator;
@@ -97,13 +100,56 @@ public class Main {
 		System.out.println("Binary entropy: " + ss.getBinaryEntropy());
 	}
 	
-	private static void testCompression(final InputStream inputStream) {
-		LZ78 lz78 = new LZ78();
-		try {
-			lz78.compress(inputStream, System.out);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
+	private static void testCompression(InputStream inputStream) {
+		byte[] originalBytes, compressedBytes, decompressedBytes;
+		{ // read data
+			int readedBytes;
+			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			byte[] data = new byte[16384];
+			try {
+				while ((readedBytes = inputStream.read(data, 0, data.length)) != -1)
+					buffer.write(data, 0, readedBytes);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return;
+			}
+			originalBytes = buffer.toByteArray();
+		}
+		{ // compress
+			inputStream = new ByteArrayInputStream(originalBytes);
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			LZ78 lz78 = new LZ78();
+			try {
+				lz78.compress(inputStream, outputStream);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return;
+			}
+			compressedBytes = outputStream.toByteArray();
+			System.err.println(lz78);
+			//lz78.printDebugInfo();
+		}
+		System.err.println();
+		{ // decompress
+			inputStream = new ByteArrayInputStream(compressedBytes);
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			LZ78 lz78 = new LZ78();
+			try {
+				lz78.decompress(inputStream, outputStream);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return;
+			}
+			decompressedBytes = outputStream.toByteArray();
+			System.err.println(lz78);
+			//lz78.printDebugInfo();
+		}
+		System.err.println();
+		{ // compare
+			if (Arrays.equals(originalBytes, decompressedBytes))
+				System.err.println("Success!");
+			else
+				System.err.println("Fuck!");
 		}
 	}
 	

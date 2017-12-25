@@ -11,15 +11,23 @@ class MagicTreeNode {
 		return size;
 	}
 	
-	public void addElement(final byte[] data, final int dataIndex, final int length) {
-		++size;
+	public boolean addElement(final byte[] data, final int dataIndex, final int length) {
+		boolean result;
 		final int arrayIndex = Byte.toUnsignedInt(data[dataIndex]);
 		if (length == 1) {
-			array[arrayIndex] = new MagicTreeNode();
+			if (array[arrayIndex] == null) {
+				array[arrayIndex] = new MagicTreeNode();
+				result = true;
+			} else {
+				result = false;
+			}
 		} else {
 			final MagicTreeNode subnode = array[arrayIndex];
-			subnode.addElement(data, dataIndex + 1, length - 1);
+			result = subnode.addElement(data, dataIndex + 1, length - 1);
 		}
+		if (result)
+			++size;
+		return result;
 	}
 	
 	public MagicTreeLeaf find(final byte[] data, final int dataIndex, final int maxLength, final int length) {
@@ -69,6 +77,13 @@ class MagicTreeNode {
 				offset += subnode.getSize();
 		}
 		return offset;
+	}
+	
+	public void print(final String name) {
+		System.err.println("\"" + name + "\" (" + size + ")" );
+		for (int arrayIndex = 0; arrayIndex != 256 ; ++arrayIndex)
+			if (array[arrayIndex] != null)
+				array[arrayIndex].print(name + ((char)arrayIndex));
 	}
 	
 }

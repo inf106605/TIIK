@@ -8,7 +8,10 @@ import java.io.OutputStream;
 public class LZ78 {
 	
 	private boolean firstCall = true;
+	private final int indexBytes = 4;
 	private final Dictionary dictionary = new Dictionary();
+	private int plainSize = 0;
+	private int compressedSize = 0;
 	
 	
 	public void compress(final InputStream inputStream, final OutputStream outputStream) throws IOException {
@@ -37,12 +40,14 @@ public class LZ78 {
 						break;
 				} else {
 					length += readed;
+					plainSize += readed;
 				}
 			}
 			
 			final Dictionary.Entry entry = dictionary.find(bytes, offset, length - 1);
 			outputStream.write(toBytes(entry.index));
 			outputStream.write(bytes, offset + entry.length, 1);
+			compressedSize += 5;
 			
 			dictionary.add(bytes, offset, entry.length + 1);
 			
@@ -51,17 +56,75 @@ public class LZ78 {
 		}
 	}
 	
-	public void writeCompressionParameters(final OutputStream outputStream) throws IOException {
+	private void writeCompressionParameters(final OutputStream outputStream) throws IOException {
 		//outputStream.write(new byte[]{4});
 	}
 	
-	public byte[] toBytes(final int x) {
-		final int bytesNum = 4;
-		final int shift = (bytesNum - 1) * 8;
-		final byte[] bytes = new byte[bytesNum];
-		for (int mask = 0xFF << shift, i = 0; mask != 0; mask >>>= 8, ++i)
+	private byte[] toBytes(final int x) {
+		int shift = (indexBytes - 1) * 8;
+		final byte[] bytes = new byte[indexBytes];
+		for (int mask = 0xFF << shift, i = 0; mask != 0; mask >>>= 8, ++i, shift -= 8)
 			bytes[i] = (byte) ((x & mask) >>> shift);
 		return bytes;
+	}
+	
+	public void decompress(final InputStream inputStream, final OutputStream outputStream) throws IOException {
+		if (firstCall) {
+			firstCall = false;
+			readCompressionParameters(inputStream);
+		}
+		final byte[] bytes = new byte[indexBytes + 1];
+		while (true) {
+			final int readed = inputStream.read(bytes, 0, bytes.length);
+			if (readed == -1)
+				break;
+			//else//TODO exception
+			compressedSize += readed;
+			
+			final int index = toInt(bytes);
+			byte[] entry;
+			if (index != 0) {
+				entry = dictionary.get(index);
+				//TODO exception
+				outputStream.write(entry);
+				plainSize += entry.length;
+			} else {
+				entry = new byte[0];
+			}
+			outputStream.write(bytes, indexBytes, 1);
+			++plainSize;
+			
+			//TODO optimize
+			final byte[] newEntry = new byte[entry.length + 1];
+			System.arraycopy(entry, 0, newEntry, 0, entry.length);
+			newEntry[entry.length] = bytes[indexBytes];
+			dictionary.add(newEntry, 0, newEntry.length);
+		}
+	}
+	
+	private void readCompressionParameters(final InputStream inpuStream) {
+		//
+	}
+	
+	private int toInt(final byte[] bytes) {
+		int result = 0;
+		for (int i = 0; i != indexBytes; ++i) {
+			result <<= 8;
+			result |= Byte.toUnsignedInt(bytes[i]);
+		}
+		return result;
+	}
+	
+	@Override
+	public String toString() {
+		return "Dictionary size:\t" + dictionary.getSize() + "\n"
+			+ "Longest entry:\t\t" + dictionary.getMaxLength() + "\n"
+			+ "Plain data size:\t" + plainSize + "\n"
+			+ "Compressed data size:\t" + compressedSize + " (" + String.format("%5f" , 100.0 * ((double) compressedSize) / ((double) plainSize)) + "%)";
+	}
+	
+	public void printDebugInfo() {
+		dictionary.printTree();
 	}
 	
 }

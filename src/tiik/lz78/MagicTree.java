@@ -7,7 +7,7 @@ class MagicTree {
 	private final MagicTreeNode mainNode = new MagicTreeNode();
 	private int maxDepth = 0;
 	
-		
+	
 	public int getSize() {
 		return mainNode.getSize();
 	}
@@ -17,8 +17,8 @@ class MagicTree {
 	}
 	
 	public void addElement(final byte[] data, final int dataIndex, final int length) {
-		mainNode.addElement(data, dataIndex, length);
-		maxDepth = length;
+		if (mainNode.addElement(data, dataIndex, length))
+			maxDepth = length;
 	}
 	
 	public MagicTreeLeaf find(final byte[] data, final int dataIndex, final int maxLength) {
@@ -29,6 +29,10 @@ class MagicTree {
 	
 	public MagicTreeLeaf get(final int index) {
 		return mainNode.get(index, 0);
+	}
+	
+	public void print() {
+		mainNode.print("");
 	}
 	
 }

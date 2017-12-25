@@ -19,7 +19,7 @@ class Dictionary {
 	
 		
 	public int getSize() {
-		return tree.getSize();
+		return tree.getSize() - 1;
 	}
 	
 	public int getMaxLength() {
@@ -45,6 +45,10 @@ class Dictionary {
 	
 	public byte[] get(final int index) {
 		return tree.get(index).getData();
-	}	
+	}
+	
+	public void printTree() {
+		tree.print();
+	}
 	
 }
