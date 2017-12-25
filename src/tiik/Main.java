@@ -127,7 +127,7 @@ public class Main {
 				return;
 			}
 			compressedBytes = outputStream.toByteArray();
-			System.err.println(lz78);
+			System.err.println("Compresion:\n" + lz78);
 			//lz78.printDebugInfo();
 		}
 		System.err.println();
@@ -142,8 +142,15 @@ public class Main {
 				return;
 			}
 			decompressedBytes = outputStream.toByteArray();
-			System.err.println(lz78);
+			System.err.println("Decompresion:\n" + lz78);
 			//lz78.printDebugInfo();
+		}
+		System.err.println();
+		{ // estimate Huffman
+			SomeStatistics ss = new SomeStatistics(originalBytes);
+			System.err.println("Estimated huffman size of plain data:\t\t" + ((int)(originalBytes.length * ss.getBinaryEntropy() / 8.0)));
+			ss = new SomeStatistics(compressedBytes);
+			System.err.println("Estimated huffman size of compressed data:\t" + ((int)(compressedBytes.length * ss.getBinaryEntropy() / 8.0)));
 		}
 		System.err.println();
 		{ // compare

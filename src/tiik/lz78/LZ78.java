@@ -148,7 +148,7 @@ public class LZ78 {
 		return "Dictionary size:\t" + dictionary.getSize() + "\n"
 			+ "Longest entry:\t\t" + dictionary.getMaxLength() + "\n"
 			+ "Plain data size:\t" + plainSize + "\n"
-			+ "Compressed data size:\t" + compressedSize + " (" + String.format("%5f" , 100.0 * ((double) compressedSize) / ((double) plainSize)) + "%)";
+			+ "Compressed data size:\t" + compressedSize + " (" + String.format("%.3f" , 100.0 * ((double) compressedSize) / ((double) plainSize)) + "%)";
 	}
 	
 	public void printDebugInfo() {
