@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import tiik.lz78.LZ78;
+import tiik.lz78.LZ78Exception;
 
 /**
  *
@@ -136,7 +137,7 @@ public class Main {
 			LZ78 lz78 = new LZ78();
 			try {
 				lz78.decompress(inputStream, outputStream);
-			} catch (IOException e) {
+			} catch (IOException | LZ78Exception e) {
 				e.printStackTrace();
 				return;
 			}

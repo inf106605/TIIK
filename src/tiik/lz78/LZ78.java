@@ -68,7 +68,7 @@ public class LZ78 {
 		return bytes;
 	}
 	
-	public void decompress(final InputStream inputStream, final OutputStream outputStream) throws IOException {
+	public void decompress(final InputStream inputStream, final OutputStream outputStream) throws IOException, LZ78Exception {
 		if (firstCall) {
 			firstCall = false;
 			readCompressionParameters(inputStream);
@@ -78,14 +78,15 @@ public class LZ78 {
 			final int readed = inputStream.read(bytes, 0, bytes.length);
 			if (readed == -1)
 				break;
-			//else//TODO exception
-			compressedSize += readed;
+			else if (readed != bytes.length)
+				throw new LZ78UnexpectedEndException(compressedSize, plainSize, readed, bytes.length);
 			
 			final int index = toInt(bytes);
 			byte[] entry;
 			if (index != 0) {
+				if (index > dictionary.getSize())
+					throw new LZ78IncorrectIndexException(compressedSize, plainSize, index);
 				entry = dictionary.get(index);
-				//TODO exception
 				outputStream.write(entry);
 				plainSize += entry.length;
 			} else {
@@ -93,6 +94,7 @@ public class LZ78 {
 			}
 			outputStream.write(bytes, indexBytes, 1);
 			++plainSize;
+			compressedSize += readed;
 			
 			//TODO optimize
 			final byte[] newEntry = new byte[entry.length + 1];
