@@ -1,10 +1,13 @@
 package tiik.lz78;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 
 class MagicTreeNode {
 	
 	private int size = 1;
-	private MagicTreeNode[] array = new MagicTreeNode[256];
+	private final SortedMap<Byte, MagicTreeNode> map = new TreeMap<Byte, MagicTreeNode>();
 	
 	
 	public int getSize() {
@@ -12,17 +15,16 @@ class MagicTreeNode {
 	}
 	
 	public boolean addElement(final byte[] data, final int dataIndex, final int length) {
+		final MagicTreeNode subnode = map.get(data[dataIndex]);
 		boolean result;
-		final int arrayIndex = Byte.toUnsignedInt(data[dataIndex]);
 		if (length == 1) {
-			if (array[arrayIndex] == null) {
-				array[arrayIndex] = new MagicTreeNode();
+			if (subnode == null) {
+				map.put(data[dataIndex], new MagicTreeNode());
 				result = true;
 			} else {
 				result = false;
 			}
 		} else {
-			final MagicTreeNode subnode = array[arrayIndex];
 			result = subnode.addElement(data, dataIndex + 1, length - 1);
 		}
 		if (result)
@@ -33,13 +35,12 @@ class MagicTreeNode {
 	public MagicTreeLeaf find(final byte[] data, final int dataIndex, final int maxLength, final int length) {
 		if (length == maxLength)
 			return new MagicTreeLeaf(1, length);
-		final int arrayIndex = Byte.toUnsignedInt(data[dataIndex]);
-		final MagicTreeNode subnode = array[arrayIndex];
+		final MagicTreeNode subnode = map.get(data[dataIndex]);
 		if (subnode == null) {
 			return new MagicTreeLeaf(1, length);
 		} else {
 			final MagicTreeLeaf leaf = subnode.find(data, dataIndex + 1, maxLength, length + 1);
-			updateLeaf(leaf, arrayIndex, length);
+			updateLeaf(leaf, data[dataIndex], length);
 			return leaf;
 		}
 	}
@@ -48,42 +49,38 @@ class MagicTreeNode {
 		if (index == 0)
 			return new MagicTreeLeaf(0, length);
 		--index;
-		int arrayIndex;
-		for (arrayIndex = 0; ; ++arrayIndex) {
-			final MagicTreeNode subnode = array[arrayIndex];
-			if (subnode != null) {
-				if (index - subnode.getSize() < 0)
-					break;
-				else
-					index -= subnode.getSize();
+		for (SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
+			if (index - entry.getValue().getSize() < 0) {
+				final MagicTreeLeaf leaf = entry.getValue().get(index, length + 1);
+				updateLeaf(leaf, entry.getKey(), length);
+				return leaf;
+			} else {
+				index -= entry.getValue().getSize();
 			}
 		}
-		final MagicTreeLeaf leaf = array[arrayIndex].get(index, length + 1);
-		updateLeaf(leaf, arrayIndex, length);
-		return leaf;
+		return null;
 	}
 	
-	private void updateLeaf(final MagicTreeLeaf leaf, final int arrayIndex, final int length) {
-		leaf.getData()[length] = (byte) arrayIndex;
-		final int subindexOffset = getSubindexOffset(arrayIndex);
+	private void updateLeaf(final MagicTreeLeaf leaf, final byte data, final int length) {
+		leaf.getData()[length] = data;
+		final int subindexOffset = getSubindexOffset(data);
 		leaf.setIndex(leaf.getIndex() + subindexOffset + 1);
 	}
 	
-	private int getSubindexOffset(int arrayIndex) {
+	private int getSubindexOffset(byte data) {
 		int offset = 0;
-		for (--arrayIndex; arrayIndex != -1; --arrayIndex) {
-			final MagicTreeNode subnode = array[arrayIndex];
-			if (subnode != null)
-				offset += subnode.getSize();
+		for (SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
+			if (entry.getKey() >= data)
+				break;
+			offset += entry.getValue().getSize();
 		}
 		return offset;
 	}
 	
 	public void print(final String name) {
 		System.err.println("\"" + name + "\" (" + size + ")" );
-		for (int arrayIndex = 0; arrayIndex != 256 ; ++arrayIndex)
-			if (array[arrayIndex] != null)
-				array[arrayIndex].print(name + ((char)arrayIndex));
+		for (SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet())
+			entry.getValue().print(name + ((char)(byte)entry.getKey()));
 	}
 	
 }
