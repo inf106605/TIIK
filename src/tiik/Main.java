@@ -119,7 +119,7 @@ public class Main {
 		{ // compress
 			inputStream = new ByteArrayInputStream(originalBytes);
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			LZ78 lz78 = new LZ78();
+			LZ78 lz78 = new LZ78(1000000);
 			try {
 				lz78.compress(inputStream, outputStream);
 			} catch (IOException e) {

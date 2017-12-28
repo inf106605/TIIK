@@ -7,11 +7,25 @@ import java.io.OutputStream;
 
 public class LZ78 {
 	
+	private int dictionarySizeLimit;
+	
 	private boolean firstCall = true;
 	private final Dictionary dictionary = new Dictionary();
 	private int plainSize = 0;
 	private int compressedSize = 0;
 	
+	
+	public LZ78() {
+		this(0);
+	}
+	
+	public LZ78(final int dictionarySizeLimit) {
+		if ((dictionarySizeLimit & (1 << 31)) != 0)
+			throw new IllegalArgumentException("Maximum dictionary size limit is " + ((1 << 31) - 1) + "!");
+		if (dictionarySizeLimit < 0)
+			throw new IllegalArgumentException("Dictionary size limit cannot be less than 0!");
+		this.dictionarySizeLimit = dictionarySizeLimit;
+	}
 	
 	public void compress(final InputStream inputStream, final OutputStream outputStream) throws IOException {
 		if (firstCall) {
@@ -49,7 +63,8 @@ public class LZ78 {
 			outputStream.write(bytes, offset + entry.length, 1);
 			compressedSize += indexBytes + 1;
 			
-			dictionary.add(bytes, offset, entry.length + 1);
+			if (dictionary.getSize() < dictionarySizeLimit)
+				dictionary.add(bytes, offset, entry.length + 1);
 			
 			length -= entry.length + 1;
 			offset += entry.length + 1;
@@ -57,7 +72,8 @@ public class LZ78 {
 	}
 	
 	private void writeCompressionParameters(final OutputStream outputStream) throws IOException {
-		//outputStream.write(new byte[]{4});
+		outputStream.write(toBytes(dictionarySizeLimit, 4));
+		compressedSize += 4;
 	}
 	
 	private static byte[] toBytes(final int x, final int bytesNumber) {
@@ -82,7 +98,7 @@ public class LZ78 {
 			if (readed == -1)
 				break;
 			else if (readed != indexBytes + 1)
-				throw new LZ78UnexpectedEndException(compressedSize, plainSize, readed, bytes.length);
+				throw new LZ78UnexpectedEndException(compressedSize, plainSize, readed, indexBytes + 1);
 			
 			final int index = toInt(bytes, indexBytes);
 			byte[] entry;
@@ -99,16 +115,23 @@ public class LZ78 {
 			++plainSize;
 			compressedSize += readed;
 			
-			//TODO optimize
-			final byte[] newEntry = new byte[entry.length + 1];
-			System.arraycopy(entry, 0, newEntry, 0, entry.length);
-			newEntry[entry.length] = bytes[indexBytes];
-			dictionary.add(newEntry, 0, newEntry.length);
+			if (dictionary.getSize() < dictionarySizeLimit) {
+				//TODO optimize
+				final byte[] newEntry = new byte[entry.length + 1];
+				System.arraycopy(entry, 0, newEntry, 0, entry.length);
+				newEntry[entry.length] = bytes[indexBytes];
+				dictionary.add(newEntry, 0, newEntry.length);
+			}
 		}
 	}
 	
-	private void readCompressionParameters(final InputStream inpuStream) {
-		//
+	private void readCompressionParameters(final InputStream inputStream) throws IOException, LZ78Exception {
+		final byte[] bytes = new byte[4];
+		final int readed = inputStream.read(bytes, 0, 4);
+		if (readed != 4)
+			throw new LZ78UnexpectedEndException(compressedSize, plainSize, readed, 4);
+		dictionarySizeLimit = toInt(bytes, 4);
+		compressedSize += 4;
 	}
 	
 	private static int toInt(final byte[] bytes, final int bytesNumber) {
