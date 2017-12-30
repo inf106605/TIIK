@@ -1,5 +1,6 @@
 package tiik.lz78;
 
+import java.util.ArrayList;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -19,25 +20,27 @@ class MagicTreeNode {
 		return size;
 	}
 	
-	public boolean addElement(final byte[] data, final int importance, final int dataIndex, final int length) {
+	public int addElement(final byte[] data, final int importance, final int dataIndex, final int length) {
 		MagicTreeNode subnode = map.get(data[dataIndex]);
-		boolean result;
+		int result;
 		if (length == 1) {
 			if (subnode == null) {
 				map.put(data[dataIndex], new MagicTreeNode(importance));
-				result = true;
+				result = 1;
 			} else {
-				result = false;
+				result = 0;
 			}
 		} else {
 			if (subnode == null) {
 				subnode = new MagicTreeNode(importance);
 				map.put(data[dataIndex], subnode);
+				result = 1;
+			} else {
+				result = 0;
 			}
-			result = subnode.addElement(data, importance, dataIndex + 1, length - 1);
+			result += subnode.addElement(data, importance, dataIndex + 1, length - 1);
 		}
-		if (result)
-			++size;
+		size += result;
 		return result;
 	}
 	
@@ -106,17 +109,25 @@ class MagicTreeNode {
 		}
 	}
 	
-	public int remove(final byte[] bytes, final int depth, final int length) {
+	public int remove(final byte[] bytes, final int depth, final int length, final ArrayList<Integer> depths) {
 		final MagicTreeNode subnode = map.get(bytes[depth]);
 		if (length - 1 == depth) {
+			subnode.removeFromDepths(depths, depth);
 			map.remove(bytes[depth]);
 			size -= subnode.getSize();
 			return subnode.getSize();
 		} else {
-			final int removedElements = subnode.remove(bytes, depth + 1, length);
+			final int removedElements = subnode.remove(bytes, depth + 1, length, depths);
 			size -= removedElements;
 			return removedElements;
 		}
+	}
+	
+	private void removeFromDepths(final ArrayList<Integer> depths, final int depth) {
+		for (final MagicTreeNode subnode : map.values())
+			subnode.removeFromDepths(depths, depth + 1);
+		final int x = depths.get(depth);
+		depths.set(depth, x - 1);
 	}
 	
 	@Override
@@ -129,16 +140,6 @@ class MagicTreeNode {
 		for (final SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet())
 			result += "\n" + entry.getValue().toString(name + ((char)(byte)entry.getKey()));
 		return result;
-	}
-
-	public int calculateMaxDepth() {
-		int maxDepth = 0;
-		for (final MagicTreeNode subnode : map.values()) {
-			final int newMaxDepth = subnode.calculateMaxDepth();
-			if (newMaxDepth > maxDepth)
-				maxDepth = newMaxDepth;
-		}
-		return maxDepth + 1;
 	}
 	
 }

@@ -1,12 +1,18 @@
-
 package tiik.lz78;
+
+import java.util.ArrayList;
 
 
 class MagicTree {
 	
 	private final MagicTreeNode mainNode = new MagicTreeNode(0);
+	private ArrayList<Integer> depths = new ArrayList<>();
 	private int maxDepth = 0;
 	
+	
+	public MagicTree() {
+		depths.add(1);
+	}
 	
 	public int getSize() {
 		return mainNode.getSize();
@@ -16,10 +22,18 @@ class MagicTree {
 		return maxDepth;
 	}
 	
-	public boolean addElement(final byte[] data, final int importance, final int dataIndex, final int length) {
-		final boolean result = mainNode.addElement(data, importance, dataIndex, length);
-		if (result && maxDepth < length)
-			maxDepth = length;
+	public boolean addElement(final byte[] data, final int importance, final int dataIndex, int length) {
+		int newElementCount = mainNode.addElement(data, importance, dataIndex, length);
+		final boolean result = newElementCount != 0;
+		if (result && maxDepth < length) {
+			while (length + 1 > depths.size())
+				depths.add(0);
+			maxDepth = depths.size() - 1;
+			for (; newElementCount != 0; --newElementCount, --length) {
+				final int x = depths.get(length);
+				depths.set(length, x + 1);
+			}
+		}
 		return result;
 	}
 	
@@ -41,17 +55,16 @@ class MagicTree {
 		return minImportance;
 	}
 
-	public void remove(final byte[] bytes) {
-		remove(bytes, bytes.length);
+	public int remove(final byte[] bytes) {
+		return remove(bytes, bytes.length);
 	}
 
-	public void remove(final byte[] bytes, final int length) {
-		mainNode.remove(bytes, 0, length);
-		recalculateMaxDepth();
-	}
-	
-	private void recalculateMaxDepth() {
-		maxDepth = mainNode.calculateMaxDepth() - 1;
+	public int remove(final byte[] bytes, final int length) {
+		final int removedCount = mainNode.remove(bytes, 0, length, depths);
+		for (int i = depths.size() - 1; depths.get(i) == 0; --i)
+			depths.remove(i);
+		maxDepth = depths.size();
+		return removedCount;
 	}
 
 	@Override

@@ -54,13 +54,13 @@ public class LZ78 {
 						break;
 				} else {
 					length += readed;
-					plainSize += readed;
 				}
 			}
 			
 			final Dictionary.Entry entry = dictionary.find(bytes, offset, length - 1);
 			outputStream.write(toBytes(entry.index, indexBytes));
 			outputStream.write(bytes, offset + entry.length, 1);
+			plainSize += entry.length + 1;
 			compressedSize += indexBytes + 1;
 			
 			dictionary.add(bytes, offset, entry.length + 1);
