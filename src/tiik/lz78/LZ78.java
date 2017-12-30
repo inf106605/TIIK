@@ -168,7 +168,7 @@ public class LZ78 {
 	
 	@Override
 	public String toString() {
-		return "Dictionary size:\t" + dictionary.getSize() + "\n"
+		return "Dictionary size:\t" + dictionary.getSize() + " (max: " + dictionarySizeLimit + ")\n"
 			+ "Longest entry:\t\t" + dictionary.getMaxLength() + "\n"
 			+ "Plain data size:\t" + plainSize + "\n"
 			+ "Compressed data size:\t" + compressedSize + " (" + String.format("%.3f" , 100.0 * ((double) compressedSize) / ((double) plainSize)) + "%)";
