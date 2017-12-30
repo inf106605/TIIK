@@ -16,6 +16,7 @@ class Dictionary {
 	
 	
 	private final MagicTree tree = new MagicTree();
+	private int totalSize = 0;
 	
 		
 	public int getSize() {
@@ -31,7 +32,12 @@ class Dictionary {
 	}
 	
 	public void add(final byte[] data, final int dataIndex, final int length) {
-		tree.addElement(data, dataIndex, length);
+		if (tree.addElement(data, totalSize + 1, dataIndex, length))
+			++totalSize;
+	}
+	
+	public void removeOne() {
+		tree.removeLeastImportant();
 	}
 	
 	public Entry find(final byte[] data, final int length) {
@@ -47,8 +53,9 @@ class Dictionary {
 		return tree.get(index).getData();
 	}
 	
-	public void printTree() {
-		tree.print();
+	@Override
+	public String toString() {
+		return tree.toString();
 	}
 	
 }

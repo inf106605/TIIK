@@ -6,26 +6,35 @@ import java.util.TreeMap;
 
 class MagicTreeNode {
 	
+	private int importance;
 	private int size = 1;
 	private final SortedMap<Byte, MagicTreeNode> map = new TreeMap<Byte, MagicTreeNode>();
 	
+	
+	public MagicTreeNode(final int importance) {
+		this.importance = importance;
+	}
 	
 	public int getSize() {
 		return size;
 	}
 	
-	public boolean addElement(final byte[] data, final int dataIndex, final int length) {
-		final MagicTreeNode subnode = map.get(data[dataIndex]);
+	public boolean addElement(final byte[] data, final int importance, final int dataIndex, final int length) {
+		MagicTreeNode subnode = map.get(data[dataIndex]);
 		boolean result;
 		if (length == 1) {
 			if (subnode == null) {
-				map.put(data[dataIndex], new MagicTreeNode());
+				map.put(data[dataIndex], new MagicTreeNode(importance));
 				result = true;
 			} else {
 				result = false;
 			}
 		} else {
-			result = subnode.addElement(data, dataIndex + 1, length - 1);
+			if (subnode == null) {
+				subnode = new MagicTreeNode(importance);
+				map.put(data[dataIndex], subnode);
+			}
+			result = subnode.addElement(data, importance, dataIndex + 1, length - 1);
 		}
 		if (result)
 			++size;
@@ -49,7 +58,7 @@ class MagicTreeNode {
 		if (index == 0)
 			return new MagicTreeLeaf(0, length);
 		--index;
-		for (SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
+		for (final SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
 			if (index - entry.getValue().getSize() < 0) {
 				final MagicTreeLeaf leaf = entry.getValue().get(index, length + 1);
 				updateLeaf(leaf, entry.getKey(), length);
@@ -69,7 +78,7 @@ class MagicTreeNode {
 	
 	private int getSubindexOffset(byte data) {
 		int offset = 0;
-		for (SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
+		for (final SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
 			if (entry.getKey() >= data)
 				break;
 			offset += entry.getValue().getSize();
@@ -77,10 +86,59 @@ class MagicTreeNode {
 		return offset;
 	}
 	
-	public void print(final String name) {
-		System.err.println("\"" + name + "\" (" + size + ")" );
-		for (SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet())
-			entry.getValue().print(name + ((char)(byte)entry.getKey()));
+	public int findLeastImportant(int minImportance, final byte[] bytes, final int depth, final int[] length) {
+		if (map.isEmpty()) {
+			if (importance < minImportance) {
+				length[0] = depth;
+				return importance;
+			} else {
+				return minImportance;
+			}
+		} else {
+			for (final SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
+				final int newMinImportance = entry.getValue().findLeastImportant(minImportance, bytes, depth + 1, length);
+				if (newMinImportance < minImportance) {
+					minImportance = newMinImportance;
+					bytes[depth] = entry.getKey();
+				}
+			}
+			return minImportance;
+		}
+	}
+	
+	public int remove(final byte[] bytes, final int depth, final int length) {
+		final MagicTreeNode subnode = map.get(bytes[depth]);
+		if (length - 1 == depth) {
+			map.remove(bytes[depth]);
+			size -= subnode.getSize();
+			return subnode.getSize();
+		} else {
+			final int removedElements = subnode.remove(bytes, depth + 1, length);
+			size -= removedElements;
+			return removedElements;
+		}
+	}
+	
+	@Override
+	public String toString() {
+		return toString("");
+	}
+	
+	private String toString(final String name) {
+		String result = "\"" + name + "\" (" + size + ")";
+		for (final SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet())
+			result += "\n" + entry.getValue().toString(name + ((char)(byte)entry.getKey()));
+		return result;
+	}
+
+	public int calculateMaxDepth() {
+		int maxDepth = 0;
+		for (final MagicTreeNode subnode : map.values()) {
+			final int newMaxDepth = subnode.calculateMaxDepth();
+			if (newMaxDepth > maxDepth)
+				maxDepth = newMaxDepth;
+		}
+		return maxDepth + 1;
 	}
 	
 }

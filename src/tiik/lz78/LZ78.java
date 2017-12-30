@@ -63,8 +63,9 @@ public class LZ78 {
 			outputStream.write(bytes, offset + entry.length, 1);
 			compressedSize += indexBytes + 1;
 			
-			if (dictionary.getSize() < dictionarySizeLimit)
-				dictionary.add(bytes, offset, entry.length + 1);
+			dictionary.add(bytes, offset, entry.length + 1);
+			while (dictionary.getSize() > dictionarySizeLimit)
+				dictionary.removeOne();
 			
 			length -= entry.length + 1;
 			offset += entry.length + 1;
@@ -115,13 +116,13 @@ public class LZ78 {
 			++plainSize;
 			compressedSize += readed;
 			
-			if (dictionary.getSize() < dictionarySizeLimit) {
-				//TODO optimize
-				final byte[] newEntry = new byte[entry.length + 1];
-				System.arraycopy(entry, 0, newEntry, 0, entry.length);
-				newEntry[entry.length] = bytes[indexBytes];
-				dictionary.add(newEntry, 0, newEntry.length);
-			}
+			//TODO optimize
+			final byte[] newEntry = new byte[entry.length + 1];
+			System.arraycopy(entry, 0, newEntry, 0, entry.length);
+			newEntry[entry.length] = bytes[indexBytes];
+			dictionary.add(newEntry, 0, newEntry.length);
+			while (dictionary.getSize() > dictionarySizeLimit)
+				dictionary.removeOne();
 		}
 	}
 	
@@ -144,10 +145,17 @@ public class LZ78 {
 	}
 	
 	private int getIndexBytes() {
-		final int dictionarySize = dictionary.getSize();
-		if (dictionarySize < (1 << 16)) {
-			if (dictionarySize < (1 << 8)) {
-				if (dictionarySize == 0)
+		return getMaxBytes(dictionary.getSize());
+	}
+	
+	private int getMaxIndexBytes() {
+		return getMaxBytes(dictionarySizeLimit);
+	}
+	
+	private static int getMaxBytes(final int maxValue) {
+		if (maxValue < (1 << 16)) {
+			if (maxValue < (1 << 8)) {
+				if (maxValue == 0)
 					return 0;
 				else
 					return 1;
@@ -155,15 +163,11 @@ public class LZ78 {
 				return 2;
 			}
 		} else {
-			if (dictionarySize < (1 << 24))
+			if (maxValue < (1 << 24))
 				return 3;
 			else
 				return 4;
 		}
-	}
-	
-	private int getMaxIndexBytes() {
-		return 4;
 	}
 	
 	@Override
@@ -175,7 +179,7 @@ public class LZ78 {
 	}
 	
 	public void printDebugInfo() {
-		dictionary.printTree();
+		System.err.println(dictionary);
 	}
 	
 }
