@@ -7,49 +7,71 @@ import java.util.TreeMap;
 
 class MagicTreeNode {
 	
-	private int importance;
+	private final MagicTree tree;
 	private int size = 1;
+	private int removingOrderIndex;
 	private final SortedMap<Byte, MagicTreeNode> map = new TreeMap<Byte, MagicTreeNode>();
 	
 	
-	public MagicTreeNode(final int importance) {
-		this.importance = importance;
+	public MagicTreeNode(final MagicTree tree, final byte[] data, final int dataIndex, final int length, final int importance) {
+		this.tree = tree;
+		final byte[] bytes = new byte[length];
+		System.arraycopy(data, dataIndex, bytes, 0, length);
+		removingOrderIndex = tree.getRemovingOrder().usefulAdd(new RemovingOrderEntry(importance, bytes));
+		updateRemovingOrderIndices(removingOrderIndex + 1, tree.getRemovingOrder().size());
 	}
-	
+
 	public int getSize() {
 		return size;
 	}
 	
-	public int addElement(final byte[] data, final int importance, final int dataIndex, final int length) {
-		MagicTreeNode subnode = map.get(data[dataIndex]);
+	int getRemovingOrderIndex() {
+		return removingOrderIndex;
+	}
+	
+	public byte[] getBytes() {
+		return tree.getRemovingOrder().get(removingOrderIndex).bytes;
+	}
+	
+	public int addElement(final byte[] data, final int originalDataIndex, final int dataIndex, final int length, final int importance) {
+		final byte mapIndex = data[dataIndex];
+		MagicTreeNode subnode = map.get(mapIndex);
 		int result;
 		if (length == 1) {
 			if (subnode == null) {
-				map.put(data[dataIndex], new MagicTreeNode(importance));
+				map.put(mapIndex, new MagicTreeNode(tree, data, originalDataIndex, dataIndex - originalDataIndex + 1, importance));
 				result = 1;
 			} else {
 				result = 0;
 			}
 		} else {
 			if (subnode == null) {
-				subnode = new MagicTreeNode(importance);
-				map.put(data[dataIndex], subnode);
+				subnode = new MagicTreeNode(tree, data, originalDataIndex, dataIndex - originalDataIndex + 1, importance);
+				map.put(mapIndex, subnode);
 				result = 1;
 			} else {
 				result = 0;
 			}
-			result += subnode.addElement(data, importance, dataIndex + 1, length - 1);
+			result += subnode.addElement(data, originalDataIndex, dataIndex + 1, length - 1, importance);
 		}
 		size += result;
+		final RemovingOrderEntry removingOrderEntry = tree.getRemovingOrder().get(removingOrderIndex);
+		if (removingOrderEntry.importance <= importance) {
+			final int oldRemovingOrderIndex = removingOrderIndex;
+			tree.getRemovingOrder().remove(removingOrderIndex);
+			removingOrderEntry.importance = importance;
+			removingOrderIndex = tree.getRemovingOrder().usefulAdd(removingOrderEntry);
+			updateRemovingOrderIndices(oldRemovingOrderIndex, removingOrderIndex);
+		}
 		return result;
 	}
 	
 	public MagicTreeLeaf find(final byte[] data, final int dataIndex, final int maxLength, final int length) {
 		if (length == maxLength)
-			return new MagicTreeLeaf(1, length);
+			return new MagicTreeLeaf(1, this);
 		final MagicTreeNode subnode = map.get(data[dataIndex]);
 		if (subnode == null) {
-			return new MagicTreeLeaf(1, length);
+			return new MagicTreeLeaf(1, this);
 		} else {
 			final MagicTreeLeaf leaf = subnode.find(data, dataIndex + 1, maxLength, length + 1);
 			updateLeaf(leaf, data[dataIndex], length);
@@ -59,7 +81,7 @@ class MagicTreeNode {
 	
 	public MagicTreeLeaf get(int index, final int length) {
 		if (index == 0)
-			return new MagicTreeLeaf(0, length);
+			return new MagicTreeLeaf(0, this);
 		--index;
 		for (final SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
 			if (index - entry.getValue().getSize() < 0) {
@@ -74,7 +96,6 @@ class MagicTreeNode {
 	}
 	
 	private void updateLeaf(final MagicTreeLeaf leaf, final byte data, final int length) {
-		leaf.getData()[length] = data;
 		final int subindexOffset = getSubindexOffset(data);
 		leaf.setIndex(leaf.getIndex() + subindexOffset + 1);
 	}
@@ -89,30 +110,10 @@ class MagicTreeNode {
 		return offset;
 	}
 	
-	public int findLeastImportant(int minImportance, final byte[] bytes, final int depth, final int[] length) {
-		if (map.isEmpty()) {
-			if (importance < minImportance) {
-				length[0] = depth;
-				return importance;
-			} else {
-				return minImportance;
-			}
-		} else {
-			for (final SortedMap.Entry<Byte, MagicTreeNode> entry : map.entrySet()) {
-				final int newMinImportance = entry.getValue().findLeastImportant(minImportance, bytes, depth + 1, length);
-				if (newMinImportance < minImportance) {
-					minImportance = newMinImportance;
-					bytes[depth] = entry.getKey();
-				}
-			}
-			return minImportance;
-		}
-	}
-	
 	public int remove(final byte[] bytes, final int depth, final int length, final ArrayList<Integer> depths) {
 		final MagicTreeNode subnode = map.get(bytes[depth]);
 		if (length - 1 == depth) {
-			subnode.removeFromDepths(depths, depth);
+			subnode.removeFromOtherCollections(depths, depth);
 			map.remove(bytes[depth]);
 			size -= subnode.getSize();
 			return subnode.getSize();
@@ -123,11 +124,21 @@ class MagicTreeNode {
 		}
 	}
 	
-	private void removeFromDepths(final ArrayList<Integer> depths, final int depth) {
+	private void removeFromOtherCollections(final ArrayList<Integer> depths, final int depth) {
 		for (final MagicTreeNode subnode : map.values())
-			subnode.removeFromDepths(depths, depth + 1);
+			subnode.removeFromOtherCollections(depths, depth + 1);
 		final int x = depths.get(depth);
 		depths.set(depth, x - 1);
+		tree.getRemovingOrder().remove(removingOrderIndex);
+		updateRemovingOrderIndices(0, tree.getRemovingOrder().size());
+	}
+	
+	private void updateRemovingOrderIndices(final int begin, final int end) {
+		for (int i = begin; i != end; ++i) {
+			final RemovingOrderEntry roe = tree.getRemovingOrder().get(i);
+			final MagicTreeNode node = tree.find(roe.bytes).getNode();
+			node.removingOrderIndex = i;
+		}
 	}
 	
 	@Override

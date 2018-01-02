@@ -1,6 +1,5 @@
 package tiik.lz78;
 
-
 class Dictionary {
 	
 	public class Entry {

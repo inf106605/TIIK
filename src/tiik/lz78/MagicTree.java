@@ -2,10 +2,13 @@ package tiik.lz78;
 
 import java.util.ArrayList;
 
+import tiik.containers.PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne;
+
 
 class MagicTree {
 	
-	private final MagicTreeNode mainNode = new MagicTreeNode(0);
+	private final PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<RemovingOrderEntry> removingOrder = new PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<>();
+	private final MagicTreeNode mainNode = new MagicTreeNode(this, new byte[0], 0, 0, 0);
 	private ArrayList<Integer> depths = new ArrayList<>();
 	private int maxDepth = 0;
 	
@@ -22,10 +25,14 @@ class MagicTree {
 		return maxDepth;
 	}
 	
+	PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<RemovingOrderEntry> getRemovingOrder() {
+		return removingOrder;
+	}
+	
 	public boolean addElement(final byte[] data, final int importance, final int dataIndex, int length) {
-		int newElementCount = mainNode.addElement(data, importance, dataIndex, length);
+		int newElementCount = mainNode.addElement(data, dataIndex, dataIndex, length, importance);
 		final boolean result = newElementCount != 0;
-		if (result && maxDepth < length) {
+		if (result) {
 			while (length + 1 > depths.size())
 				depths.add(0);
 			maxDepth = depths.size() - 1;
@@ -35,6 +42,10 @@ class MagicTree {
 			}
 		}
 		return result;
+	}
+	
+	public MagicTreeLeaf find(final byte[] data) {
+		return find(data, 0, data.length);
 	}
 	
 	public MagicTreeLeaf find(final byte[] data, final int dataIndex, final int maxLength) {
@@ -48,11 +59,10 @@ class MagicTree {
 	}
 	
 	public int removeLeastImportant() {
-		final byte[] bytes = new byte[maxDepth];
-		final int[] length = new int[1];
-		final int minImportance = mainNode.findLeastImportant(Integer.MAX_VALUE, bytes, 0, length);
-		remove(bytes, length[0]);
-		return minImportance;
+		final RemovingOrderEntry roe = removingOrder.element();
+		final byte[] bytes = roe.bytes;
+		remove(bytes);
+		return roe.importance;
 	}
 
 	public int remove(final byte[] bytes) {
