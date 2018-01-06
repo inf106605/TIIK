@@ -29,10 +29,9 @@ class MagicTree {
 		return removingOrder;
 	}
 	
-	public boolean addElement(final byte[] data, final int importance, final int dataIndex, int length) {
-		int newElementCount = mainNode.addElement(data, dataIndex, dataIndex, length, importance);
-		final boolean result = newElementCount != 0;
-		if (result) {
+	public int addElement(final byte[] data, final int importance, final int dataIndex, int length) {
+		int newElementCount = mainNode.addElement(data, dataIndex, dataIndex, length, importance, 0);
+		if (newElementCount != 0) {
 			while (length + 1 > depths.size())
 				depths.add(0);
 			maxDepth = depths.size() - 1;
@@ -41,7 +40,7 @@ class MagicTree {
 				depths.set(length, x + 1);
 			}
 		}
-		return result;
+		return newElementCount;
 	}
 	
 	public MagicTreeLeaf find(final byte[] data) {

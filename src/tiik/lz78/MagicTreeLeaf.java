@@ -3,11 +3,11 @@ package tiik.lz78;
 class MagicTreeLeaf {
 	
 	private int index;
-	private final MagicTreeNode node;
+	private final byte[] bytes;
 	
-	public MagicTreeLeaf(final int index, final MagicTreeNode node) {
+	public MagicTreeLeaf(final int index, final int length) {
 		this.index = index;
-		this.node = node;
+		this.bytes = new byte[length];
 	}
 	
 	public int getIndex() {
@@ -18,12 +18,8 @@ class MagicTreeLeaf {
 		this.index = index;
 	}
 	
-	MagicTreeNode getNode() {
-		return node;
-	}
-	
 	public byte[] getData() {
-		return node.getBytes();
+		return bytes;
 	}
 	
 }

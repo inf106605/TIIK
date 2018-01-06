@@ -1,5 +1,7 @@
 package tiik.lz78;
 
+import java.util.Arrays;
+
 class Dictionary {
 	
 	public class Entry {
@@ -10,6 +12,10 @@ class Dictionary {
 			this.index = index;
 			this.data = data;
 			this.length = data.length;
+		}
+		@Override
+		public String toString() {
+			return "(" + index + ", " + Arrays.toString(data) + ")";
 		}
 	}
 	
@@ -31,8 +37,7 @@ class Dictionary {
 	}
 	
 	public void add(final byte[] data, final int dataIndex, final int length) {
-		if (tree.addElement(data, totalSize + 1, dataIndex, length))
-			++totalSize;
+		totalSize += tree.addElement(data, totalSize + 1, dataIndex, length);
 	}
 	
 	public void removeOne() {

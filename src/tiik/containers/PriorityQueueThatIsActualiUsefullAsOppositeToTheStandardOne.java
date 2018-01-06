@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 
 
@@ -95,7 +96,7 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 	}
 
 	@Override
-	public Iterator<E> iterator() {
+	public BetterIterator<E> iterator() {
 		return container.iterator();
 	}
 	
@@ -275,6 +276,33 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 		final int comparedPrevious = (previous == null) ? 1 : comparator.compare(e, previous);
 		final int comparedNext = (next == null) ? -1 : comparator.compare(e, next);
 		return comparedPrevious < 0 || comparedNext > 0;
+	}
+	
+	public BetterIterator<E> findPriority(final E serachedE) {
+		if (container.isEmpty())
+			throw new NoSuchElementException();
+		final List<Integer> deltas = makeDeltas();
+	    final Iterator<Integer> iter = deltas.iterator();
+		int i = iter.next() - 1;
+	    while (true) {
+	        final E e = container.get(i);
+	        final int compare = comparator.compare(serachedE, e);
+			if (compare == 0) {
+	            BetterListIterator<E> listIter = container.listIterator(i);
+	            while (listIter.hasPrevious()) {
+		            if (comparator.compare(serachedE, listIter.previous()) != 0)
+		            	return listIter;
+	            }
+	            return listIter;
+	        } else if (!iter.hasNext()) {
+	        	throw new NoSuchElementException();
+	        } else {
+	            if (compare < 0)
+	                i -= iter.next();
+	            else
+	                i += iter.next();
+	        }
+	    }
 	}
 	
 	@Override

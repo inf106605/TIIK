@@ -6,11 +6,13 @@ final class RemovingOrderEntry implements Comparable<RemovingOrderEntry> {
 	
 	public int importance;
 	public final byte[] bytes;
+	public final MagicTreeNode node;
 	
 	
-	public RemovingOrderEntry(final int importance, final byte[] bytes) {
+	public RemovingOrderEntry(final int importance, final byte[] bytes, final MagicTreeNode node) {
 		this.importance = importance;
 		this.bytes = bytes;
+		this.node = node;
 	}
 	
 	@Override

@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Iterator that works good for all lists that have O(1) complexity of {@link List#get(int)}.
  */
-public class UniversalIteratorForRandomAccessLists<E> implements java.util.ListIterator<E>, BetterIterator<E> {
+public class UniversalIteratorForRandomAccessLists<E> implements BetterListIterator<E> {
 	
 	private final List<E> list;
 	private int index;

@@ -149,7 +149,7 @@ public class ArrayDequeThatDoesNotSmellOfShit<E> implements Deque<E>, List<E> {
 	}
 
 	@Override
-	public UniversalIteratorForRandomAccessLists<E> iterator() {
+	public BetterIterator<E> iterator() {
 		return listIterator();
 	}
 
@@ -372,12 +372,12 @@ public class ArrayDequeThatDoesNotSmellOfShit<E> implements Deque<E>, List<E> {
 	}
 
 	@Override
-	public UniversalIteratorForRandomAccessLists<E> listIterator() {
+	public BetterListIterator<E> listIterator() {
 		return new UniversalIteratorForRandomAccessLists<>(this);
 	}
 
 	@Override
-	public UniversalIteratorForRandomAccessLists<E> listIterator(int index) {
+	public BetterListIterator<E> listIterator(int index) {
 		return new UniversalIteratorForRandomAccessLists<>(this, index);
 	}
 
