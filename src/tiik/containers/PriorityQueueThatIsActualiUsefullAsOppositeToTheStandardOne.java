@@ -241,30 +241,46 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 	}
 	
 	public int update(final int index, final Updater<E> updater) {
+		return update(index, updater, false);
+	}
+	
+	public int update(final int index, final Updater<E> updater, final boolean force) {
 		final E e = get(index);
 		if (!updater.update(e))
 			return index;
-		return update(index, e);
+		return update(index, e, force);
 	}
 	
 	public int update(final int index, final E e) {
-		if (!needsUpdate(index, e))
+		return update(index, e, false);
+	}
+	
+	public int update(final int index, final E e, final boolean force) {
+		if (!force && !needsUpdate(index, e))
 			return index;
 		remove(index);
 		return usefulAdd(e);
 	}
 	
 	public int unstableUpdate(final int index, final Updater<E> updater) {
+		return unstableUpdate(index, updater, false);
+	}
+	
+	public int unstableUpdate(final int index, final Updater<E> updater, final boolean force) {
 		final E e = get(index);
 		final boolean result = updater.update(e);
 		if (result)
-			return unstableUpdate(index, e);
+			return unstableUpdate(index, e, force);
 		else
 			return index;
 	}
 	
 	public int unstableUpdate(final int index, final E e) {
-		if (!needsUpdate(index, e))
+		return unstableUpdate(index, e, false);
+	}
+	
+	public int unstableUpdate(final int index, final E e, final boolean force) {
+		if (!force && !needsUpdate(index, e))
 			return index;
 		remove(index);
 		return unstableUsefulAdd(e);

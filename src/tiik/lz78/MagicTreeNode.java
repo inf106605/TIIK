@@ -63,9 +63,8 @@ class MagicTreeNode {
 		size += result;
 		if (this.importance <= importance) {
 			final int removingOrderIndex = findRemovingOrderIndex();
-			tree.getRemovingOrder().remove(removingOrderIndex);
+			tree.getRemovingOrder().update(removingOrderIndex, entry -> {entry.importance = importance; return true;}, true);
 			this.importance = importance;
-			addToRemovingOrder(data, originalDataIndex, depth);
 		}
 		return result;
 	}
