@@ -66,7 +66,7 @@ public class LZ78 {
 			compressedSize += indexBytes + 1;
 			
 			dictionary.add(bytes, offset, entry.getLength() + 1);
-			while (dictionary.getSize() > dictionarySizeLimit)
+			while (dictionarySizeLimit != 0 && dictionary.getSize() > dictionarySizeLimit)
 				dictionary.removeOne();
 			
 			length -= entry.getLength() + 1;
@@ -123,7 +123,7 @@ public class LZ78 {
 			System.arraycopy(entry, 0, newEntry, 0, entry.length);
 			newEntry[entry.length] = bytes[indexBytes];
 			dictionary.add(newEntry, 0, newEntry.length);
-			while (dictionary.getSize() > dictionarySizeLimit)
+			while (dictionarySizeLimit != 0 && dictionary.getSize() > dictionarySizeLimit)
 				dictionary.removeOne();
 		}
 	}
@@ -151,7 +151,7 @@ public class LZ78 {
 	}
 	
 	private int getMaxIndexBytes() {
-		return getMaxBytes(dictionarySizeLimit);
+		return getMaxBytes(dictionarySizeLimit == 0 ? Integer.MAX_VALUE : dictionarySizeLimit);
 	}
 	
 	private static int getMaxBytes(final int maxValue) {
@@ -174,7 +174,7 @@ public class LZ78 {
 	
 	@Override
 	public String toString() {
-		return "Dictionary size:\t" + dictionary.getSize() + " (max: " + dictionarySizeLimit + ")\n"
+		return "Dictionary size:\t" + dictionary.getSize() + " (max: " + (dictionarySizeLimit == 0 ? "unlimited" : dictionarySizeLimit) + ")\n"
 			+ "Longest entry:\t\t" + dictionary.getMaxLength() + "\n"
 			+ "Plain data size:\t" + plainSize + "\n"
 			+ "Compressed data size:\t" + compressedSize + " (" + String.format("%.3f" , 100.0 * ((double) compressedSize) / ((double) plainSize)) + "%)";
