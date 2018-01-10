@@ -2,12 +2,13 @@ package tiik.lz78.magictree;
 
 import java.util.ArrayList;
 
-import tiik.containers.PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne;
+import tiik.containers.PriorityQueueThatIsActualyUsefulAsOppositeToTheStandardOne;
+import tiik.containers.UsefulPriorityQueue;
 
 
 class MagicTree {
 	
-	private final PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<RemovingOrderEntry> removingOrder = new PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<>();
+	private final UsefulPriorityQueue<RemovingOrderEntry> removingOrder = new PriorityQueueThatIsActualyUsefulAsOppositeToTheStandardOne<>();
 	private final MagicTreeNode mainNode = new MagicTreeNode(this, new byte[0], 0, 0, 0);
 	private ArrayList<Integer> depths = new ArrayList<>();
 	private int maxDepth = 0;
@@ -25,7 +26,7 @@ class MagicTree {
 		return maxDepth;
 	}
 	
-	PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<RemovingOrderEntry> getRemovingOrder() {
+	UsefulPriorityQueue<RemovingOrderEntry> getRemovingOrder() {
 		return removingOrder;
 	}
 	

@@ -11,59 +11,19 @@ import java.util.Queue;
 
 
 /**
- * Do you believe that standard Java implementation of priority queue doesn't have a way to check at which position the new element was added?<br/>
- * I do, because Java is a <b>piece of shit</b>! Why do I have work with that language :-(<br/>
- * <br/>
- * "Java is fully OOP language, it was designed for this. It has mechanics that ensures that you are programming OOP."
- * Yes, definitely! Ensures it by forcing you to write class for every fucking function you write.
- * Even if the class will have one static method and nothing more, you can't just write the method, you have to create a new class.
- * It's a shame that the whole OOP support in Java ends here.
- * It is so OOP friendly anymore when you try to force encapsulation.
- * (Not that encapsulation has any importance for OOP or even is base concept behind it. No, the only thing you need is creating a new class for the tiniest utility function you write.)<br/>
- * Look, I'm trying to make this queue to ensure that elements inside it are sorted by priority.
- * Every setter function and any other function that is supposed to change the contents of the queue does that.
- * Too bad that even a fucking getter allows to change the content of the queue and it is no way to prevent that.
- * Lack of support for constant references literally violates encapsulation.<br/>
- * &lt;/rant&gt;
+ * This implementaion isn't very fast but it al least works.
  */
-public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> implements Queue<E> {
-	
-	public static interface Updater<E> {
-		boolean update(E e);
-	}
-	
+public class PriorityQueueThatIsActualyUsefulAsOppositeToTheStandardOne<E> extends UsefulPriorityQueue<E> {
 	
 	private final ArrayDequeThatDoesNotSmellOfShit<E> container = new ArrayDequeThatDoesNotSmellOfShit<E>();
-	private final Comparator<E> comparator;
 	
 	
-	public PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne() {
-		this(new Comparator<E>() {
-			@Override
-			@SuppressWarnings("unchecked")
-			public int compare(E o1, E o2) {
-				return ((Comparable<E>) o1).compareTo(o2);
-			}
-		});
+	public PriorityQueueThatIsActualyUsefulAsOppositeToTheStandardOne() {
+		super();
 	}
 	
-	public PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne(final Comparator<E> comparator) {
-		this.comparator = comparator;
-	}
-	
-	@Override
-	public boolean add(final E e) {
-		usefulAdd(e);
-		return true;
-	}
-
-	@Override
-	public boolean addAll(final Collection<? extends E> c) {
-		if (c.isEmpty())
-			return false;
-		for (final E e : c)
-			add(e);
-		return true;
+	public PriorityQueueThatIsActualyUsefulAsOppositeToTheStandardOne(final Comparator<E> comparator) {
+		super(comparator);
 	}
 
 	@Override
@@ -86,6 +46,7 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 		return container.element();
 	}
 	
+	@Override
 	public E get(final int index) {
 		return container.get(index);
 	}
@@ -100,11 +61,13 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 		return container.iterator();
 	}
 	
-	public ListIterator<E> listIterator() {
+	@Override
+	public BetterListIterator<E> listIterator() {
 		return container.listIterator();
 	}
 	
-	public ListIterator<E> listIterator(final int index) {
+	@Override
+	public BetterListIterator<E> listIterator(final int index) {
 		return container.listIterator(index);
 	}
 	
@@ -128,6 +91,7 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 		return container.remove();
 	}
 	
+	@Override
 	public E remove(final int index) {
 		return container.remove(index);
 	}
@@ -162,12 +126,14 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 		return container.toArray(a);
 	}
 	
+	@Override
 	public int usefulAdd(final E e) {
 		final int index = findIndex(e);
 		container.add(index, e);
 		return index;
 	}
 	
+	@Override
 	public int unstableUsefulAdd(final E e) {
 		final int index = unstableFindIndex(e);
 		container.add(index, e);
@@ -240,10 +206,12 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 	    }
 	}
 	
+	@Override
 	public int update(final int index, final Updater<E> updater) {
 		return update(index, updater, false);
 	}
 	
+	@Override
 	public int update(final int index, final Updater<E> updater, final boolean force) {
 		final E e = get(index);
 		if (!updater.update(e))
@@ -251,10 +219,12 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 		return update(index, e, force);
 	}
 	
+	@Override
 	public int update(final int index, final E e) {
 		return update(index, e, false);
 	}
 	
+	@Override
 	public int update(final int index, final E e, final boolean force) {
 		if (!force && !needsUpdate(index, e))
 			return index;
@@ -262,10 +232,12 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 		return usefulAdd(e);
 	}
 	
+	@Override
 	public int unstableUpdate(final int index, final Updater<E> updater) {
 		return unstableUpdate(index, updater, false);
 	}
 	
+	@Override
 	public int unstableUpdate(final int index, final Updater<E> updater, final boolean force) {
 		final E e = get(index);
 		final boolean result = updater.update(e);
@@ -275,10 +247,12 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 			return index;
 	}
 	
+	@Override
 	public int unstableUpdate(final int index, final E e) {
 		return unstableUpdate(index, e, false);
 	}
 	
+	@Override
 	public int unstableUpdate(final int index, final E e, final boolean force) {
 		if (!force && !needsUpdate(index, e))
 			return index;
@@ -294,6 +268,7 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 		return comparedPrevious < 0 || comparedNext > 0;
 	}
 	
+	@Override
 	public BetterIterator<E> findPriority(final E serachedE) {
 		if (container.isEmpty())
 			throw new NoSuchElementException();
@@ -338,7 +313,7 @@ public class PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<E> impl
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<?> other = (PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<?>) obj;
+		PriorityQueueThatIsActualyUsefulAsOppositeToTheStandardOne<?> other = (PriorityQueueThatIsActualyUsefulAsOppositeToTheStandardOne<?>) obj;
 		if (comparator == null) {
 			if (other.comparator != null)
 				return false;

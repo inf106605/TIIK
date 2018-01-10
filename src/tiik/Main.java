@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.Arrays;
+
 import tiik.lz78.LZ78;
 import tiik.lz78.LZ78Exception;
 
