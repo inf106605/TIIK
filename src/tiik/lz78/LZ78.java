@@ -4,13 +4,15 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import tiik.lz78.magictree.MagicTreeDictionary;
+
 
 public class LZ78 {
 	
 	private int dictionarySizeLimit;
 	
 	private boolean firstCall = true;
-	private final Dictionary dictionary = new Dictionary();
+	private final Dictionary dictionary = new MagicTreeDictionary();
 	private int plainSize = 0;
 	private int compressedSize = 0;
 	
@@ -58,17 +60,17 @@ public class LZ78 {
 			}
 			
 			final Dictionary.Entry entry = dictionary.find(bytes, offset, length - 1);
-			outputStream.write(toBytes(entry.index, indexBytes));
-			outputStream.write(bytes, offset + entry.length, 1);
-			plainSize += entry.length + 1;
+			outputStream.write(toBytes(entry.getIndex(), indexBytes));
+			outputStream.write(bytes, offset + entry.getLength(), 1);
+			plainSize += entry.getLength() + 1;
 			compressedSize += indexBytes + 1;
 			
-			dictionary.add(bytes, offset, entry.length + 1);
+			dictionary.add(bytes, offset, entry.getLength() + 1);
 			while (dictionary.getSize() > dictionarySizeLimit)
 				dictionary.removeOne();
 			
-			length -= entry.length + 1;
-			offset += entry.length + 1;
+			length -= entry.getLength() + 1;
+			offset += entry.getLength() + 1;
 		}
 	}
 	

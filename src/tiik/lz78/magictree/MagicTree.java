@@ -1,4 +1,4 @@
-package tiik.lz78;
+package tiik.lz78.magictree;
 
 import java.util.ArrayList;
 
