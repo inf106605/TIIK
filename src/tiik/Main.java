@@ -20,15 +20,17 @@ public class Main {
 		int dictLimit = 0;
 		while (args.length > offset && args[offset].charAt(0) == '-') {
 			switch(args[offset]) {
+				case "-d":
+				case "--decompress":
+					compress = false;
+					++offset;
+					break;
 				case "-h":
 				case "--help":
 					showHelp();
 					return;
-				case "-d":
-					compress = false;
-					++offset;
-					break;
 				case "-s":
+				case "--size":
 					++offset;
 					if (args.length == offset) {
 						System.err.println("Option '-s' needs an argument!");
@@ -69,13 +71,13 @@ public class Main {
 	}
 	
 	private static void showHelp() {
-		System.out.println("This programm allows to compress and decompress a file or the input stream\nusing a crippled implementation of lz78 that was written by a dumb student.\nDon't use it!");
+		System.out.println("This programm allows to compress and decompress a file or the input stream\nusing a retarded implementation of lz78 that was written by a dumb student.\nDon't use it!");
 		System.out.println();
 		System.out.println("Usage:\tPROGRAM [OPTION]... [IN_FILE]");
 		System.out.println("Options:");
-		System.out.println("\t-h, --help\tShow this info.");
-		System.out.println("\t-d\t\tDecompress.");
-		System.out.println("\t-s LIMIT\tSet limit of sictionary size. (default: 0 - unlimited)");
+		System.out.println("\t-d, --decompress\tDecompress.");
+		System.out.println("\t-h, --help\t\tShow this info.");
+		System.out.println("\t-s, --size LIMIT\tSet limit of dictionary size.\n\t\t\t\t(default: 0 - unlimited)");
 	}
 	
 	private static void doTheWork(final InputStream inputStream, final OutputStream outputStream, final int dictLimit, final boolean compress) {
