@@ -2,9 +2,10 @@ package tiik.lz78.magictree;
 
 import java.util.Arrays;
 
+import tiik.lz78.AbstractDictionary;
 import tiik.lz78.Dictionary;
 
-public class MagicTreeDictionary implements Dictionary {
+public class MagicTreeDictionary extends AbstractDictionary {
 	
 	public class Entry implements Dictionary.Entry {
 		
@@ -51,14 +52,17 @@ public class MagicTreeDictionary implements Dictionary {
 	
 	public void add(final byte[] data, final int length) {
 		add(data, 0, length);
+		super.add(data, length);
 	}
 	
 	public void add(final byte[] data, final int dataIndex, final int length) {
 		totalSize += tree.addElement(data, totalSize + 1, dataIndex, length);
+		super.add(data, dataIndex, length);
 	}
 	
-	public void removeOne() {
-		tree.removeLeastImportant();
+	public void reset() {
+		tree.clear();
+		super.reset();
 	}
 	
 	public Entry find(final byte[] data, final int length) {

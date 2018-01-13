@@ -2,13 +2,10 @@ package tiik.lz78.magictree;
 
 import java.util.ArrayList;
 
-import tiik.containers.PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne;
-
 
 class MagicTree {
 	
-	private final PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<RemovingOrderEntry> removingOrder = new PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<>();
-	private final MagicTreeNode mainNode = new MagicTreeNode(this, new byte[0], 0, 0, 0);
+	private final MagicTreeNode mainNode = new MagicTreeNode();
 	private ArrayList<Integer> depths = new ArrayList<>();
 	private int maxDepth = 0;
 	
@@ -25,10 +22,6 @@ class MagicTree {
 		return maxDepth;
 	}
 	
-	PriorityQueueThatIsActualiUsefullAsOppositeToTheStandardOne<RemovingOrderEntry> getRemovingOrder() {
-		return removingOrder;
-	}
-	
 	public int addElement(final byte[] data, final int importance, final int dataIndex, int length) {
 		int newElementCount = mainNode.addElement(data, dataIndex, dataIndex, length, importance, 0);
 		if (newElementCount != 0) {
@@ -43,6 +36,12 @@ class MagicTree {
 		return newElementCount;
 	}
 	
+	public void clear() {
+		mainNode.clear();
+		depths.clear();
+		maxDepth = 0;
+	}
+	
 	public MagicTreeLeaf find(final byte[] data) {
 		return find(data, 0, data.length);
 	}
@@ -55,13 +54,6 @@ class MagicTree {
 	
 	public MagicTreeLeaf get(final int index) {
 		return mainNode.get(index, 0);
-	}
-	
-	public int removeLeastImportant() {
-		final RemovingOrderEntry roe = removingOrder.element();
-		final byte[] bytes = roe.bytes;
-		remove(bytes);
-		return roe.importance;
 	}
 
 	public int remove(final byte[] bytes) {
