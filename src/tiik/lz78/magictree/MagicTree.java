@@ -38,6 +38,8 @@ class MagicTree {
 	
 	public void clear() {
 		mainNode.clear();
+		depths.clear();
+		maxDepth = 0;
 	}
 	
 	public MagicTreeLeaf find(final byte[] data) {

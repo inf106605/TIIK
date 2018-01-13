@@ -67,7 +67,7 @@ public class LZ78 {
 			
 			dictionary.add(bytes, offset, entry.getLength() + 1);
 			if (dictionarySizeLimit != 0 && dictionary.getSize() > dictionarySizeLimit)
-				dictionary.clear();
+				dictionary.reset();
 			
 			length -= entry.getLength() + 1;
 			offset += entry.getLength() + 1;
@@ -124,7 +124,7 @@ public class LZ78 {
 			newEntry[entry.length] = bytes[indexBytes];
 			dictionary.add(newEntry, 0, newEntry.length);
 			if (dictionarySizeLimit != 0 && dictionary.getSize() > dictionarySizeLimit)
-				dictionary.clear();
+				dictionary.reset();
 		}
 	}
 	
@@ -175,7 +175,9 @@ public class LZ78 {
 	@Override
 	public String toString() {
 		return "Dictionary size:\t" + dictionary.getSize() + " (max: " + (dictionarySizeLimit == 0 ? "unlimited" : dictionarySizeLimit) + ")\n"
+			+ "Dictionary resets:\t" + dictionary.getResetCount() + "\n"
 			+ "Longest entry:\t\t" + dictionary.getMaxLength() + "\n"
+			+ "Longest entry ever:\t" + dictionary.getMaxLengthEver() + "\n"
 			+ "Plain data size:\t" + plainSize + "\n"
 			+ "Compressed data size:\t" + compressedSize + " (" + String.format("%.3f" , 100.0 * ((double) compressedSize) / ((double) plainSize)) + "%)";
 	}
