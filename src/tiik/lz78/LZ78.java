@@ -66,8 +66,8 @@ public class LZ78 {
 			compressedSize += indexBytes + 1;
 			
 			dictionary.add(bytes, offset, entry.getLength() + 1);
-			while (dictionarySizeLimit != 0 && dictionary.getSize() > dictionarySizeLimit)
-				dictionary.removeOne();
+			if (dictionarySizeLimit != 0 && dictionary.getSize() > dictionarySizeLimit)
+				dictionary.clear();
 			
 			length -= entry.getLength() + 1;
 			offset += entry.getLength() + 1;
@@ -123,8 +123,8 @@ public class LZ78 {
 			System.arraycopy(entry, 0, newEntry, 0, entry.length);
 			newEntry[entry.length] = bytes[indexBytes];
 			dictionary.add(newEntry, 0, newEntry.length);
-			while (dictionarySizeLimit != 0 && dictionary.getSize() > dictionarySizeLimit)
-				dictionary.removeOne();
+			if (dictionarySizeLimit != 0 && dictionary.getSize() > dictionarySizeLimit)
+				dictionary.clear();
 		}
 	}
 	

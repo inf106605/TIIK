@@ -57,8 +57,8 @@ public class MagicTreeDictionary implements Dictionary {
 		totalSize += tree.addElement(data, totalSize + 1, dataIndex, length);
 	}
 	
-	public void removeOne() {
-		tree.removeLeastImportant();
+	public void clear() {
+		tree.clear();
 	}
 	
 	public Entry find(final byte[] data, final int length) {

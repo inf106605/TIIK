@@ -1,7 +1,5 @@
 package tiik.lz78;
 
-import java.util.Arrays;
-
 public interface Dictionary {
 	
 	public interface Entry {
@@ -16,7 +14,7 @@ public interface Dictionary {
 	public int getMaxLength();
 	public void add(final byte[] data, final int length);
 	public void add(final byte[] data, final int dataIndex, final int length);
-	public void removeOne();
+	public void clear();
 	public Entry find(final byte[] data, final int length);
 	public Entry find(final byte[] data, final int dataIndex, final int length);
 	public byte[] get(final int index);

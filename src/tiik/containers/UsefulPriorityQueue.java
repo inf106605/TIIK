@@ -2,7 +2,6 @@ package tiik.containers;
 
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Queue;
 
 
